@@ -1,18 +1,9 @@
 <?php
-/**
- * db_functions.php
- * 
- * Contains all database functions for accessing and manipulating data.
- * This file only provides functions - it doesn't handle any requests directly.
- */
+// Contains all database functions for accessing and manipulating data
 
 require_once 'db_connect.php';
 
-/**
- * Gets all teams with their members
- * 
- * @return array Associative array of team IDs and member names
- */
+// Gets all cleaning teams with their members
 function getTeams() {
     global $conn;
     
@@ -40,11 +31,7 @@ function getTeams() {
     return $teams;
 }
 
-/**
- * Gets all tasks with their assigned teams
- * 
- * @return array Array of tasks with their assigned team information
- */
+// Gets all tasks with their assigned teams
 function getTasks() {
     global $conn;
     
@@ -73,11 +60,7 @@ function getTasks() {
     return $tasks;
 }
 
-/**
- * Gets all tasks with their subtasks and team information
- * 
- * @return array Array of tasks including subtasks and assigned team members
- */
+// Gets all tasks + subtasks and team information
 function getAllTasksWithSubtasks() {
     global $conn;
     
@@ -123,12 +106,30 @@ function getAllTasksWithSubtasks() {
     return $tasksWithSubtasks;
 }
 
-/**
- * Updates task team assignments
- * 
- * @param array $taskTeams Array of task ID and team ID pairs
- * @return array Success/error message
- */
+// Get list of supplies and collection status
+function getSupplies() {
+    global $conn;
+    
+    // Check if connection exists
+    if (!$conn) {
+        return []; // Return empty array instead of dying
+    }
+    
+    $supplies = [];
+    
+    $sql = "SELECT id, item, collected FROM supplies ORDER BY item";
+    $result = $conn->query($sql);
+    
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $supplies[] = $row;
+        }
+    }
+    
+    return $supplies;
+}
+
+// Updates task team assignments, input array of tasks and teams
 function updateTaskTeams($taskTeams) {
     global $conn;
     
@@ -172,13 +173,7 @@ function updateTaskTeams($taskTeams) {
     }
 }
 
-/**
- * Updates subtask signature assignments
- * 
- * @param int $taskId The task ID being updated
- * @param array $signatures Array of subtask ID and signature pairs
- * @return array Success/error message
- */
+// Updates sign-offs for subtasks
 function updateSubtaskSignatures($taskId, $signatures) {
     global $conn;
     
@@ -217,11 +212,51 @@ function updateSubtaskSignatures($taskId, $signatures) {
     }
 }
 
-/**
- * Resets all subtask signature assignments to NULL
- * 
- * @return array Success/error message
- */
+// Update supplies db with check offs
+function updateSupplies($supplies) {
+    global $conn;
+    
+    // Check if connection exists
+    if (!$conn) {
+        return ['success' => false, 'message' => 'Database connection error'];
+    }
+    
+    // Prepare the statement once
+    $sql = "UPDATE supplies SET collected = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    
+    if (!$stmt) {
+        return ['success' => false, 'message' => 'SQL prepare error: ' . $conn->error];
+    }
+    
+    $errors = [];
+    
+    // Execute for each supply
+    foreach ($supplies as $supply) {
+        if (!isset($supply['id']) || !isset($supply['collected'])) {
+            continue;
+        }
+        
+        $supplyId = intval($supply['id']);
+        $collected = intval($supply['collected']); // Convert to 1 or 0
+        
+        $stmt->bind_param("ii", $collected, $supplyId);
+        
+        if (!$stmt->execute()) {
+            $errors[] = "Error updating supply ID $supplyId: " . $stmt->error;
+        }
+    }
+    
+    $stmt->close();
+    
+    if (count($errors) > 0) {
+        return ['success' => false, 'message' => implode("; ", $errors)];
+    } else {
+        return ['success' => true];
+    }
+}
+
+// Resets all subtask signature assignments to NULL
 function resetAllSignatures() {
     global $conn;
     
@@ -244,12 +279,30 @@ function resetAllSignatures() {
     }
 }
 
-/**
- * Debug logging function
- * 
- * @param string $message The message to log
- * @param mixed $data Optional data to include in the log
- */
+// Reset all supplies to unchecked (0)
+function resetSupplies() {
+    global $conn;
+    
+    // Check if connection exists
+    if (!$conn) {
+        return ['success' => false, 'message' => 'Database connection error'];
+    }
+    
+    // Prepare the SQL statement to reset all supplies
+    $sql = "UPDATE supplies SET collected = 0 WHERE 1";
+    
+    // Execute the query
+    if ($conn->query($sql) === TRUE) {
+        return ['success' => true, 'message' => 'All supplies have been reset successfully'];
+    } else {
+        return [
+            'success' => false, 
+            'message' => 'Error resetting supplies: ' . $conn->error
+        ];
+    }
+}
+
+// Debug logging function
 function debugLog($message, $data = null) {
     $logMessage = date('Y-m-d H:i:s') . " - " . $message;
     if ($data !== null) {

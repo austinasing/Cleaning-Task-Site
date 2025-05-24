@@ -1,9 +1,5 @@
 <?php
-/**
- * index.php
- * 
- * Main application page that displays the task assignment interface.
- */
+//Main application page that displays the task assignment interface.
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -16,6 +12,7 @@ require_once 'db_functions.php';
 $teams = getTeams();
 $tasks = getTasks();
 $tasksWithSubtasks = getAllTasksWithSubtasks();
+$supplies = getSupplies();
 ?>
 
 <!DOCTYPE html>
@@ -140,17 +137,51 @@ $tasksWithSubtasks = getAllTasksWithSubtasks();
     <div class="section" id="supplies-section">
         <h2>Supplies</h2>
         
+        <div id="suppliesSuccessMessage" class="message success">
+            Supplies checked off successfully!
+        </div>
+        
+        <?php if (empty($supplies)): ?>
+            <p>No supplies found in the database.</p>
+        <?php else: ?>
+            <form id="suppliesForm">
+                <div class="supplies-grid">
+                    <?php foreach ($supplies as $supply): ?>
+                        <div class="supply-item">
+                            <label for="supply-<?= $supply['id'] ?>">
+                                <input 
+                                    type="checkbox" 
+                                    id="supply-<?= $supply['id'] ?>" 
+                                    name="supplies[<?= $supply['id'] ?>]" 
+                                    value="1" 
+                                    <?= $supply['collected'] ? 'checked' : '' ?>
+                                >
+                                <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $supply['item']))) ?>
+                            </label>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                
+                <button type="submit" id="saveSuppliesButton">Update Supplies</button>
+            </form>
+        <?php endif; ?>
     </div>
 
     <!-- Reset All Signatures Button Section -->
     <div class="section" id="reset-section">
         <h2>Reset all sign-offs</h2>
         
-        <div id="resetSuccessMessage" class="message success">
+        <div id="resetSignaturesSuccessMessage" class="message success">
             All signature assignments have been reset successfully!
         </div>
         
-        <button id="resetAllSignaturesButton" class="danger-button">Reset</button>
+        <button id="resetAllSignaturesButton" class="danger-button">Reset sign-offs</button>
+                        
+        <h2>Reset supplies</h2>
+        <div id="resetSuppliesSuccessMessage" class="message success">
+            All supplies assignments have been reset successfully!
+        </div>
+        <button id="resetSuppliesButton" class="danger-button">Reset supplies</button>
     </div>
 
     <script src="script.js"></script>

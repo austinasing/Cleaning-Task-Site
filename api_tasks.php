@@ -1,10 +1,5 @@
 <?php
-/**
- * api_tasks.php
- * 
- * API endpoint for task-related operations.
- * This file handles requests related to subtasks and signatures.
- */
+//handles requests related to subtasks and signatures.
 
 require_once 'db_functions.php';
 

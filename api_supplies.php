@@ -1,5 +1,5 @@
 <?php
-//handles requests to reset data for a new week
+// handles requests to update supplies collection
 
 require_once 'db_functions.php';
 
@@ -10,21 +10,27 @@ header('Content-Type: application/json');
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle POST requests
     if (isset($_POST['action'])) {
-        debugLog("Reset API - POST action: " . $_POST['action']);
+        debugLog("Supplies API - POST action: " . $_POST['action']);
         
         switch($_POST['action']) {
-            case 'resetAllSignatures':
-                debugLog("Processing resetAllSignatures action");
-                $result = resetAllSignatures();
-                debugLog("Reset result:", $result);
-                echo json_encode($result);
+            case 'updateSupplies':
+                debugLog("Processing updateSupplies action");
+                
+                if (isset($_POST['supplies'])) {
+                    $supplies = json_decode($_POST['supplies'], true);
+                    debugLog("Supplies data received:", $supplies);
+                    
+                    $result = updateSupplies($supplies);
+                    debugLog("Update result:", $result);
+                    echo json_encode($result);
+                } else {
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => 'Missing supplies data'
+                    ]);
+                }
                 break;
-            case 'resetSupplies':
-                debugLog("Processing resetSupplies action");
-                $result = resetSupplies();
-                debugLog("Reset result:", $result);
-                echo json_encode($result);
-                break;
+                
             default:
                 debugLog("Invalid action: " . $_POST['action']);
                 echo json_encode([

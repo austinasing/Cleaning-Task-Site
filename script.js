@@ -1,4 +1,3 @@
-// script.js
 document.addEventListener('DOMContentLoaded', function() {
     // ==========================================
     // Team Assignment Form Handling
@@ -133,12 +132,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ==========================================
+    // Supplies Form Handling
+    // ==========================================
+    const suppliesForm = document.getElementById('suppliesForm');
+    
+    if (suppliesForm) {
+        suppliesForm.addEventListener('submit', function(event) {
+            // Prevent the default form submission
+            event.preventDefault();
+            
+            // Collect all supply statuses
+            const supplies = [];
+            const checkboxes = document.querySelectorAll('input[name^="supplies["]');
+            
+            checkboxes.forEach(checkbox => {
+                // Extract supply ID from the name attribute (e.g., supplies[1])
+                const supplyId = checkbox.name.match(/\d+/)[0];
+                supplies.push({
+                    id: supplyId,
+                    collected: checkbox.checked ? 1 : 0
+                });
+            });
+            
+            // Send data to the server
+            console.log(supplies)
+            updateSupplies(supplies);
+        });
+    }
+    
+    // Function to update supplies status
+    function updateSupplies(supplies) {
+        const formData = new FormData();
+        formData.append('action', 'updateSupplies');
+        formData.append('supplies', JSON.stringify(supplies));
+        
+        // Log what we're sending
+        console.log('Sending supplies to server:');
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+        
+        fetch('api_supplies.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                const successMessage = document.getElementById('suppliesSuccessMessage');
+                successMessage.style.display = 'block';
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            } else {
+                alert('Error: ' + (data.message || 'An unknown error occurred'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the supplies.');
+        });
+    }
+
+    // ==========================================
     // Reset All Signatures Button Handling
     // ==========================================
-    const resetButton = document.getElementById('resetAllSignaturesButton');
+    const resetSignaturesButton = document.getElementById('resetAllSignaturesButton');
     
-    if (resetButton) {
-        resetButton.addEventListener('click', function() {
+    if (resetSignaturesButton) {
+        resetSignaturesButton.addEventListener('click', function() {
             // Ask for confirmation before proceeding
             if (confirm('Are you sure you want to reset all signature assignments? This action cannot be undone.')) {
                 resetAllSignatures();
@@ -165,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 // Show success message
-                const successMessage = document.getElementById('resetSuccessMessage');
+                const successMessage = document.getElementById('resetSignaturesSuccessMessage');
                 successMessage.style.display = 'block';
                 
                 // Hide success message after 3 seconds
@@ -188,4 +253,67 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('An error occurred while resetting signatures.');
         });
     }
+
+    // ==========================================
+    // Reset Supplies Button Handling
+    // ==========================================
+    const resetSuppliesButton = document.getElementById('resetSuppliesButton');
+    
+    if (resetSuppliesButton) {
+        resetSuppliesButton.addEventListener('click', function() {
+            // Ask for confirmation before proceeding
+            if (confirm('Are you sure you want to reset all supplies? This action cannot be undone.')) {
+                resetSupplies();
+            }
+        });
+    }
+
+    // Function to reset all signatures
+    function resetSupplies() {
+        const formData = new FormData();
+        formData.append('action', 'resetSupplies');
+        
+        // Log what we're sending
+        console.log('Sending to server:');
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+
+        fetch('api_reset.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                const successMessage = document.getElementById('resetSuppliesSuccessMessage');
+                successMessage.style.display = 'block';
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+                
+                // Reset all checkboxes to default
+                const suppliesForm = document.getElementById('suppliesForm');
+                if (suppliesForm) {
+                    const checkboxes = suppliesForm.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    console.log("js unchecked boxes")
+                }
+                
+                // We don't need to reload the page now that we've manually reset the dropdowns
+            } else {
+                alert('Error: ' + (data.message || 'An unknown error occurred'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while resetting signatures.');
+        });
+    }
+
 });
