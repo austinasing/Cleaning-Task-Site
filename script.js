@@ -316,4 +316,131 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ==========================================
+    // Wishlist Handling
+    // ==========================================
+    const addWishlistItemForm = document.getElementById('addWishlistItemForm');
+    const wishlistItemNameInput = document.getElementById('wishlistItemName');
+    const wishlistItemsList = document.getElementById('wishlistItemsList');
+    const wishlistSuccessMessage = document.getElementById('wishlistSuccessMessage');
+    const wishlistErrorMessage = document.getElementById('wishlistErrorMessage');
+
+    function displayWishlistMessage(message, isSuccess) {
+        const messageElement = isSuccess ? wishlistSuccessMessage : wishlistErrorMessage;
+        messageElement.textContent = message;
+        messageElement.style.display = 'block';
+        messageElement.className = isSuccess ? 'message success' : 'message error'; // Ensure correct class
+
+        setTimeout(() => {
+            messageElement.style.display = 'none';
+        }, 3000);
+    }
+    
+    // Function to add item to UI
+    function addWishlistItemToUI(item) {
+        const listItem = document.createElement('li');
+        listItem.setAttribute('data-id', item.id);
+        listItem.textContent = item.item + ' '; // Add space for the button
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.className = 'delete-wishlist-item';
+        deleteButton.setAttribute('data-id', item.id);
+        
+        deleteButton.addEventListener('click', function() {
+            handleDeleteWishlistItem(item.id);
+        });
+
+        listItem.appendChild(deleteButton);
+        wishlistItemsList.appendChild(listItem);
+
+        // Remove "No items" message if present
+        const noItemsMessage = document.getElementById('no-wishlist-items');
+        if (noItemsMessage) {
+            noItemsMessage.remove();
+        }
+    }
+
+    // Handle Add Wishlist Item Form Submission
+    if (addWishlistItemForm) {
+        addWishlistItemForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const itemName = wishlistItemNameInput.value.trim();
+
+            if (!itemName) {
+                displayWishlistMessage('Item name cannot be empty.', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'addWishlistItem');
+            formData.append('item', itemName);
+
+            fetch('api_supplies.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.item) {
+                    addWishlistItemToUI(data.item);
+                    wishlistItemNameInput.value = ''; // Clear input
+                    displayWishlistMessage(data.message, true);
+                } else {
+                    displayWishlistMessage(data.message || 'Could not add item.', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayWishlistMessage('An error occurred while adding the item.', false);
+            });
+        });
+    }
+
+    // Function to handle delete wishlist item
+    function handleDeleteWishlistItem(itemId) {
+
+        const formData = new FormData();
+        formData.append('action', 'deleteWishlistItem');
+        formData.append('itemId', itemId);
+
+        fetch('api_supplies.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const itemElement = wishlistItemsList.querySelector(`li[data-id="${itemId}"]`);
+                if (itemElement) {
+                    itemElement.remove();
+                }
+                displayWishlistMessage(data.message, true);
+
+                // If list is empty, show "No items" message
+                if (wishlistItemsList.children.length === 0) {
+                    const noItemsMessage = document.createElement('li');
+                    noItemsMessage.id = 'no-wishlist-items';
+                    noItemsMessage.textContent = 'No items in the wishlist yet.';
+                    wishlistItemsList.appendChild(noItemsMessage);
+                }
+            } else {
+                displayWishlistMessage(data.message || 'Could not delete item.', false);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            displayWishlistMessage('An error occurred while deleting the item.', false);
+        });
+    }
+
+    // Add event listeners to existing delete buttons on page load
+    document.querySelectorAll('.delete-wishlist-item').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-id');
+            handleDeleteWishlistItem(itemId);
+        });
+    });
+
+
 });

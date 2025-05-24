@@ -256,6 +256,69 @@ function updateSupplies($supplies) {
     }
 }
 
+// Get all wishlist items
+function getWishlistItems() {
+    global $conn;
+    if (!$conn) {
+        return [];
+    }
+    $wishlistItems = [];
+    $sql = "SELECT id, item FROM wishlist ORDER BY id";
+    $result = $conn->query($sql);
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $wishlistItems[] = $row;
+        }
+    }
+    return $wishlistItems;
+}
+
+// Add a new item to the wishlist
+function addWishlistItem($item) {
+    global $conn;
+    if (!$conn) {
+        return ['success' => false, 'message' => 'Database connection error'];
+    }
+    $sql = "INSERT INTO wishlist (item) VALUES (?)";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return ['success' => false, 'message' => 'SQL prepare error: ' . $conn->error];
+    }
+    $stmt->bind_param("s", $item);
+    if ($stmt->execute()) {
+        $newItem = ['id' => $stmt->insert_id, 'item' => $item];
+        return ['success' => true, 'message' => 'Item added to wishlist successfully', 'item' => $newItem];
+    } else {
+        return ['success' => false, 'message' => 'Error adding item to wishlist: ' . $stmt->error];
+    }
+    $stmt->close();
+}
+
+// Delete an item from the wishlist
+function deleteWishlistItem($itemId) {
+    global $conn;
+    if (!$conn) {
+        return ['success' => false, 'message' => 'Database connection error'];
+    }
+    $sql = "DELETE FROM wishlist WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return ['success' => false, 'message' => 'SQL prepare error: ' . $conn->error];
+    }
+    $itemId = intval($itemId);
+    $stmt->bind_param("i", $itemId);
+    if ($stmt->execute()) {
+        if ($stmt->affected_rows > 0) {
+            return ['success' => true, 'message' => 'Item deleted from wishlist successfully'];
+        } else {
+            return ['success' => false, 'message' => 'Item not found or already deleted'];
+        }
+    } else {
+        return ['success' => false, 'message' => 'Error deleting item from wishlist: ' . $stmt->error];
+    }
+    $stmt->close();
+}
+
 // Resets all subtask signature assignments to NULL
 function resetAllSignatures() {
     global $conn;

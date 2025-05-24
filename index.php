@@ -167,6 +167,32 @@ $supplies = getSupplies();
         <?php endif; ?>
     </div>
 
+    <!-- Wishlist Section-->
+     <div class="section" id="wishlist-section">
+        <h2>Wishlist</h2>
+        <div id="wishlistSuccessMessage" class="message success"></div>
+        <div id="wishlistErrorMessage" class="message error"></div>
+        
+        <form id="addWishlistItemForm">
+            <input type="text" id="wishlistItemName" placeholder="Enter item name" required>
+            <button type="submit">Add to Wishlist</button>
+        </form>
+        
+        <h4>Current Wishlist:</h4>
+        <ul id="wishlistItemsList">
+            <?php if (empty($wishlistItems)): ?>
+                <li id="no-wishlist-items">No items in the wishlist yet.</li>
+            <?php else: ?>
+                <?php foreach ($wishlistItems as $item): ?>
+                    <li data-id="<?= $item['id'] ?>">
+                        <?= htmlspecialchars($item['item']) ?>
+                        <button class="delete-wishlist-item" data-id="<?= $item['id'] ?>">Delete</button>
+                    </li>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </ul>
+    </div>
+
     <!-- Reset All Signatures Button Section -->
     <div class="section" id="reset-section">
         <h2>Reset all sign-offs</h2>
