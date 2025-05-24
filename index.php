@@ -13,6 +13,11 @@ $teams = getTeams();
 $tasks = getTasks();
 $tasksWithSubtasks = getAllTasksWithSubtasks();
 $supplies = getSupplies();
+$wishlistItems = getWishlistItems(); 
+$allRoommates = getAllRoommates();
+$lateTasks = getLateTasks();
+
+$daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 ?>
 
 <!DOCTYPE html>
@@ -193,7 +198,58 @@ $supplies = getSupplies();
         </ul>
     </div>
 
-    <!-- Reset All Signatures Button Section -->
+    <!-- Late Task Section-->
+    <div class="section" id="latetasks-section">
+        <h2>Late Tasks</h2>
+        <div id="lateTaskSuccessMessage" class="message success"></div>
+        <div id="lateTaskErrorMessage" class="message error"></div>
+        
+        <form id="addLateTaskForm">
+            <div>
+                <label for="lateTaskName">Name:</label>
+                <select id="lateTaskName" name="lateTaskName" required>
+                    <option value="">-- Select Roommate --</option>
+                    <?php foreach ($allRoommates as $roommate): ?>
+                        <option value="<?= htmlspecialchars($roommate['name']) ?>">
+                            <?= htmlspecialchars($roommate['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label for="lateTaskDay">Day:</label>
+                <select id="lateTaskDay" name="lateTaskDay" required>
+                    <option value="">-- Select Day --</option>
+                    <?php foreach ($daysOfWeek as $day): ?>
+                        <option value="<?= htmlspecialchars($day) ?>">
+                            <?= htmlspecialchars($day) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label for="lateTaskDescription">Task:</label>
+                <input type="text" id="lateTaskDescription" name="lateTaskDescription" placeholder="Enter task description" required>
+            </div>
+            <button type="submit">Add Late Task</button>
+        </form>
+        
+        <h4>Current Late Tasks:</h4>
+        <ul id="lateTasksList">
+            <?php if (empty($lateTasks)): ?>
+                <li id="no-late-tasks">No late tasks recorded.</li>
+            <?php else: ?>
+                <?php foreach ($lateTasks as $lt): ?>
+                    <li data-id="<?= $lt['id'] ?>">
+                        <strong><?= htmlspecialchars($lt['name']) ?></strong> (<?= htmlspecialchars($lt['day']) ?>): <?= htmlspecialchars($lt['task']) ?>
+                    </li>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </ul>
+    </div>
+
+
+    <!-- Reset Section -->
     <div class="section" id="reset-section">
         <h2>Reset all sign-offs</h2>
         
@@ -208,6 +264,12 @@ $supplies = getSupplies();
             All supplies assignments have been reset successfully!
         </div>
         <button id="resetSuppliesButton" class="danger-button">Reset supplies</button>
+    
+        <h2>Reset Late Tasks</h2> <div id="resetLateTasksSuccessMessage" class="message success">
+            All late tasks have been reset successfully!
+        </div>
+        <div id="resetLateTasksErrorMessage" class="message error"></div>
+        <button id="resetAllLateTasksButton" class="danger-button">Reset All Late Tasks</button>
     </div>
 
     <script src="script.js"></script>

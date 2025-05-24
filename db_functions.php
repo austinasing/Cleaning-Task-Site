@@ -3,6 +3,23 @@
 
 require_once 'db_connect.php';
 
+// Get all roommates
+function getAllRoommates() {
+    global $conn;
+    if (!$conn) {
+        return [];
+    }
+    $roommates = [];
+    $sql = "SELECT id, name FROM roommates ORDER BY name";
+    $result = $conn->query($sql);
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $roommates[] = $row;
+        }
+    }
+    return $roommates;
+}
+
 // Gets all cleaning teams with their members
 function getTeams() {
     global $conn;
@@ -127,6 +144,40 @@ function getSupplies() {
     }
     
     return $supplies;
+}
+
+// Get all wishlist items
+function getWishlistItems() {
+    global $conn;
+    if (!$conn) {
+        return [];
+    }
+    $wishlistItems = [];
+    $sql = "SELECT id, item FROM wishlist ORDER BY id";
+    $result = $conn->query($sql);
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $wishlistItems[] = $row;
+        }
+    }
+    return $wishlistItems;
+}
+
+// Get all late tasks
+function getLateTasks() {
+    global $conn;
+    if (!$conn) {
+        return [];
+    }
+    $lateTasks = [];
+    $sql = "SELECT id, name, day, task FROM latetask ORDER BY id DESC"; // Show newest first
+    $result = $conn->query($sql);
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $lateTasks[] = $row;
+        }
+    }
+    return $lateTasks;
 }
 
 // Updates task team assignments, input array of tasks and teams
@@ -256,23 +307,6 @@ function updateSupplies($supplies) {
     }
 }
 
-// Get all wishlist items
-function getWishlistItems() {
-    global $conn;
-    if (!$conn) {
-        return [];
-    }
-    $wishlistItems = [];
-    $sql = "SELECT id, item FROM wishlist ORDER BY id";
-    $result = $conn->query($sql);
-    if ($result && $result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $wishlistItems[] = $row;
-        }
-    }
-    return $wishlistItems;
-}
-
 // Add a new item to the wishlist
 function addWishlistItem($item) {
     global $conn;
@@ -290,6 +324,27 @@ function addWishlistItem($item) {
         return ['success' => true, 'message' => 'Item added to wishlist successfully', 'item' => $newItem];
     } else {
         return ['success' => false, 'message' => 'Error adding item to wishlist: ' . $stmt->error];
+    }
+    $stmt->close();
+}
+
+// Add a new late task
+function addLateTask($name, $day, $task) {
+    global $conn;
+    if (!$conn) {
+        return ['success' => false, 'message' => 'Database connection error'];
+    }
+    $sql = "INSERT INTO latetask (name, day, task) VALUES (?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return ['success' => false, 'message' => 'SQL prepare error: ' . $conn->error];
+    }
+    $stmt->bind_param("sss", $name, $day, $task);
+    if ($stmt->execute()) {
+        $newLateTask = ['id' => $stmt->insert_id, 'name' => $name, 'day' => $day, 'task' => $task];
+        return ['success' => true, 'message' => 'Late task added successfully', 'lateTask' => $newLateTask];
+    } else {
+        return ['success' => false, 'message' => 'Error adding late task: ' . $stmt->error];
     }
     $stmt->close();
 }
@@ -361,6 +416,24 @@ function resetSupplies() {
         return [
             'success' => false, 
             'message' => 'Error resetting supplies: ' . $conn->error
+        ];
+    }
+}
+
+// Reset all late tasks
+function resetAllLateTasks() {
+    global $conn;
+    if (!$conn) {
+        return ['success' => false, 'message' => 'Database connection error'];
+    }
+    $sql = "DELETE FROM latetask"; // Deletes all rows
+    if ($conn->query($sql) === TRUE) {
+        // Check affected rows to see if any were deleted, though not strictly necessary for DELETE without WHERE
+        return ['success' => true, 'message' => 'All late tasks have been reset successfully'];
+    } else {
+        return [
+            'success' => false, 
+            'message' => 'Error resetting late tasks: ' . $conn->error
         ];
     }
 }

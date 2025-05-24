@@ -25,6 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 debugLog("Reset result:", $result);
                 echo json_encode($result);
                 break;
+            case 'resetAllLateTasks':
+                debugLog("Processing resetAllLateTasks action");
+                $result = resetAllLateTasks();
+                debugLog("Reset Late Tasks result:", $result);
+                echo json_encode($result);
+                break;
             default:
                 debugLog("Invalid action: " . $_POST['action']);
                 echo json_encode([

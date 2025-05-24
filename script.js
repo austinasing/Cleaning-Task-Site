@@ -198,121 +198,149 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ==========================================
-    // Reset All Signatures Button Handling
+    // Late Tasks Handling
     // ==========================================
-    const resetSignaturesButton = document.getElementById('resetAllSignaturesButton');
-    
-    if (resetSignaturesButton) {
-        resetSignaturesButton.addEventListener('click', function() {
-            // Ask for confirmation before proceeding
-            if (confirm('Are you sure you want to reset all signature assignments? This action cannot be undone.')) {
-                resetAllSignatures();
-            }
-        });
-    }
-    
-    // Function to reset all signatures
-    function resetAllSignatures() {
-        const formData = new FormData();
-        formData.append('action', 'resetAllSignatures');
-        
-        // Log what we're sending
-        console.log('Sending to server:');
-        for (const [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
+    const addLateTaskForm = document.getElementById('addLateTaskForm');
+    const lateTaskNameSelect = document.getElementById('lateTaskName');
+    const lateTaskDaySelect = document.getElementById('lateTaskDay');
+    const lateTaskDescriptionInput = document.getElementById('lateTaskDescription');
+    const lateTasksList = document.getElementById('lateTasksList');
+    const lateTaskSuccessMessage = document.getElementById('lateTaskSuccessMessage');
+    const lateTaskErrorMessage = document.getElementById('lateTaskErrorMessage');
+
+    function displayLateTaskMessage(message, isSuccess) {
+        const messageElement = isSuccess ? lateTaskSuccessMessage : lateTaskErrorMessage;
+        if (messageElement) { // Check if element exists
+            messageElement.textContent = message;
+            messageElement.style.display = 'block';
+            messageElement.className = isSuccess ? 'message success' : 'message error';
+
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 3000);
+        } else {
+            console.warn("Message element for late tasks not found.");
         }
-
-        fetch('api_reset.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show success message
-                const successMessage = document.getElementById('resetSignaturesSuccessMessage');
-                successMessage.style.display = 'block';
-                
-                // Hide success message after 3 seconds
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 3000);
-                
-                // Reset all dropdown selections to default
-                document.querySelectorAll('.person-select').forEach(select => {
-                    select.value = ''; // Set to empty (default option)
-                });
-                
-                // We don't need to reload the page now that we've manually reset the dropdowns
-            } else {
-                alert('Error: ' + (data.message || 'An unknown error occurred'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while resetting signatures.');
-        });
     }
 
-    // ==========================================
-    // Reset Supplies Button Handling
-    // ==========================================
-    const resetSuppliesButton = document.getElementById('resetSuppliesButton');
-    
-    if (resetSuppliesButton) {
-        resetSuppliesButton.addEventListener('click', function() {
-            // Ask for confirmation before proceeding
-            if (confirm('Are you sure you want to reset all supplies? This action cannot be undone.')) {
-                resetSupplies();
-            }
-        });
-    }
+    function addLateTaskToUI(lateTask) {
+        const listItem = document.createElement('li');
+        listItem.setAttribute('data-id', lateTask.id);
+        listItem.innerHTML = `<strong>${escapeHTML(lateTask.name)}</strong> (${escapeHTML(lateTask.day)}): ${escapeHTML(lateTask.task)} `; // Use innerHTML to set strong tag
 
-    // Function to reset all signatures
-    function resetSupplies() {
-        const formData = new FormData();
-        formData.append('action', 'resetSupplies');
-        
-        // Log what we're sending
-        console.log('Sending to server:');
-        for (const [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
+        lateTasksList.appendChild(listItem);
+
+        const noItemsMessage = document.getElementById('no-late-tasks');
+        if (noItemsMessage) {
+            noItemsMessage.remove();
         }
+    }
+    
+    // Helper to escape HTML special characters
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
 
-        fetch('api_reset.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show success message
-                const successMessage = document.getElementById('resetSuppliesSuccessMessage');
-                successMessage.style.display = 'block';
-                
-                // Hide success message after 3 seconds
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 3000);
-                
-                // Reset all checkboxes to default
-                const suppliesForm = document.getElementById('suppliesForm');
-                if (suppliesForm) {
-                    const checkboxes = suppliesForm.querySelectorAll('input[type="checkbox"]');
-                    checkboxes.forEach(checkbox => {
-                        checkbox.checked = false;
-                    });
-                    console.log("js unchecked boxes")
+    if (addLateTaskForm) {
+        addLateTaskForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = lateTaskNameSelect.value;
+            const day = lateTaskDaySelect.value;
+            const task = lateTaskDescriptionInput.value.trim();
+
+            if (!name || !day || !task) {
+                displayLateTaskMessage('All fields (Name, Day, Task) are required.', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'addLateTask');
+            formData.append('name', name);
+            formData.append('day', day);
+            formData.append('task', task);
+
+            fetch('api_latetask.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.lateTask) {
+                    addLateTaskToUI(data.lateTask);
+                    lateTaskNameSelect.value = ''; // Clear select
+                    lateTaskDaySelect.value = '';  // Clear select
+                    lateTaskDescriptionInput.value = ''; // Clear input
+                    displayLateTaskMessage(data.message, true);
+                } else {
+                    displayLateTaskMessage(data.message || 'Could not add late task.', false);
                 }
-                
-                // We don't need to reload the page now that we've manually reset the dropdowns
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayLateTaskMessage('An error occurred while adding the late task.', false);
+            });
+        });
+    }
+
+    // ==========================================
+    // Reset All Late Tasks Button Handling
+    // ==========================================
+    const resetLateTasksButton = document.getElementById('resetAllLateTasksButton');
+    const resetLateTasksSuccessMessage = document.getElementById('resetLateTasksSuccessMessage');
+    const resetLateTasksErrorMessage = document.getElementById('resetLateTasksErrorMessage');
+
+    if (resetLateTasksButton) {
+        resetLateTasksButton.addEventListener('click', function() {
+            if (confirm('Are you sure you want to reset ALL late tasks? This action cannot be undone.')) {
+                resetAllLateTasks();
+            }
+        });
+    }
+
+    function displayResetLateTasksMessage(message, isSuccess) {
+        const messageElement = isSuccess ? resetLateTasksSuccessMessage : resetLateTasksErrorMessage;
+         if (messageElement) { // Check if element exists
+            messageElement.textContent = message;
+            messageElement.style.display = 'block';
+            messageElement.className = isSuccess ? 'message success' : 'message error';
+
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 3000);
+        } else {
+            console.warn("Message element for reset late tasks not found.");
+        }
+    }
+
+    function resetAllLateTasks() {
+        const formData = new FormData();
+        formData.append('action', 'resetAllLateTasks');
+
+        fetch('api_reset.php', { // Pointing to the existing api_reset.php
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayResetLateTasksMessage(data.message, true);
+                // Clear the list from UI
+                while (lateTasksList.firstChild) {
+                    lateTasksList.removeChild(lateTasksList.firstChild);
+                }
+                const noItemsMessage = document.createElement('li');
+                noItemsMessage.id = 'no-late-tasks';
+                noItemsMessage.textContent = 'No late tasks recorded.';
+                lateTasksList.appendChild(noItemsMessage);
             } else {
-                alert('Error: ' + (data.message || 'An unknown error occurred'));
+                displayResetLateTasksMessage(data.message || 'An unknown error occurred.', false);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while resetting signatures.');
+            displayResetLateTasksMessage('An error occurred while resetting late tasks.', false);
         });
     }
 
@@ -442,5 +470,123 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // ==========================================
+    // Reset All Signatures Button Handling
+    // ==========================================
+    const resetSignaturesButton = document.getElementById('resetAllSignaturesButton');
+    
+    if (resetSignaturesButton) {
+        resetSignaturesButton.addEventListener('click', function() {
+            // Ask for confirmation before proceeding
+            if (confirm('Are you sure you want to reset all signature assignments? This action cannot be undone.')) {
+                resetAllSignatures();
+            }
+        });
+    }
+    
+    // Function to reset all signatures
+    function resetAllSignatures() {
+        const formData = new FormData();
+        formData.append('action', 'resetAllSignatures');
+        
+        // Log what we're sending
+        console.log('Sending to server:');
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+
+        fetch('api_reset.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                const successMessage = document.getElementById('resetSignaturesSuccessMessage');
+                successMessage.style.display = 'block';
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+                
+                // Reset all dropdown selections to default
+                document.querySelectorAll('.person-select').forEach(select => {
+                    select.value = ''; // Set to empty (default option)
+                });
+                
+                // We don't need to reload the page now that we've manually reset the dropdowns
+            } else {
+                alert('Error: ' + (data.message || 'An unknown error occurred'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while resetting signatures.');
+        });
+    }
+
+    // ==========================================
+    // Reset Supplies Button Handling
+    // ==========================================
+    const resetSuppliesButton = document.getElementById('resetSuppliesButton');
+    
+    if (resetSuppliesButton) {
+        resetSuppliesButton.addEventListener('click', function() {
+            // Ask for confirmation before proceeding
+            if (confirm('Are you sure you want to reset all supplies? This action cannot be undone.')) {
+                resetSupplies();
+            }
+        });
+    }
+
+    // Function to reset all signatures
+    function resetSupplies() {
+        const formData = new FormData();
+        formData.append('action', 'resetSupplies');
+        
+        // Log what we're sending
+        console.log('Sending to server:');
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+
+        fetch('api_reset.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                const successMessage = document.getElementById('resetSuppliesSuccessMessage');
+                successMessage.style.display = 'block';
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+                
+                // Reset all checkboxes to default
+                const suppliesForm = document.getElementById('suppliesForm');
+                if (suppliesForm) {
+                    const checkboxes = suppliesForm.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    console.log("js unchecked boxes")
+                }
+                
+                // We don't need to reload the page now that we've manually reset the dropdowns
+            } else {
+                alert('Error: ' + (data.message || 'An unknown error occurred'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while resetting signatures.');
+        });
+    }
 
 });
