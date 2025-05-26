@@ -81,8 +81,8 @@ INSERT INTO roommates (name, team) VALUES
 
 CREATE TABLE supplies (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    item VARCHAR(255) NOT NULL,
-    collected TINYINT(1) NOT NULL DEFAULT 0
+    item VARCHAR(32) NOT NULL,
+    collected VARCHAR(32) DEFAULT NULL
     );
 
 INSERT INTO supplies (item) VALUES

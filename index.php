@@ -150,22 +150,34 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <p>No supplies found in the database.</p>
         <?php else: ?>
             <form id="suppliesForm">
-                <div class="supplies-grid">
+                <table id="suppliesTable">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
                     <?php foreach ($supplies as $supply): ?>
-                        <div class="supply-item">
-                            <label for="supply-<?= $supply['id'] ?>">
-                                <input 
-                                    type="checkbox" 
-                                    id="supply-<?= $supply['id'] ?>" 
-                                    name="supplies[<?= $supply['id'] ?>]" 
-                                    value="1" 
-                                    <?= $supply['collected'] ? 'checked' : '' ?>
-                                >
-                                <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $supply['item']))) ?>
-                            </label>
-                        </div>
+                        <tr data-supply-id="<?= $supply['id'] ?>">
+                            <td><?= htmlspecialchars(ucfirst(str_replace('_', ' ', $supply['item']))) ?></td>
+                            <td>
+                                <select name="supplies[<?= $supply['id'] ?>]" class="supply-status-select">
+                                    <option value="still enough" <?= ($supply['collected'] === 'still enough') ? 'selected' : '' ?>>
+                                        Still Enough
+                                    </option>
+                                    <option value="bought items" <?= ($supply['collected'] === 'bought items') ? 'selected' : '' ?>>
+                                        Bought Items
+                                    </option>
+                                    <option value=" " <?= (!in_array($supply['collected'], ['still enough', 'bought items'])) ? 'selected' : '' ?>>
+                                         
+                                    </option>
+                                </select>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
-                </div>
+                </tbody>
+            </table>
                 
                 <button type="submit" id="saveSuppliesButton">Update Supplies</button>
             </form>

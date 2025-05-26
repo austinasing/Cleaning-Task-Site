@@ -143,19 +143,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Collect all supply statuses
             const supplies = [];
-            const checkboxes = document.querySelectorAll('input[name^="supplies["]');
-            
-            checkboxes.forEach(checkbox => {
+            const selects = document.querySelectorAll('select[name^="supplies["]');
+
+            selects.forEach(select => {
                 // Extract supply ID from the name attribute (e.g., supplies[1])
-                const supplyId = checkbox.name.match(/\d+/)[0];
+                const supplyId = select.name.match(/\d+/)[0];
                 supplies.push({
                     id: supplyId,
-                    collected: checkbox.checked ? 1 : 0
+                    collected: select.value // Get the selected value from the dropdown
                 });
             });
-            
-            // Send data to the server
-            console.log(supplies)
             updateSupplies(supplies);
         });
     }
@@ -568,15 +565,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     successMessage.style.display = 'none';
                 }, 3000);
                 
-                // Reset all checkboxes to default
-                const suppliesForm = document.getElementById('suppliesForm');
-                if (suppliesForm) {
-                    const checkboxes = suppliesForm.querySelectorAll('input[type="checkbox"]');
-                    checkboxes.forEach(checkbox => {
-                        checkbox.checked = false;
-                    });
-                    console.log("js unchecked boxes")
-                }
+                // Reset all selection to default
+                const suppliesSelects = document.querySelectorAll('#suppliesForm select[name^="supplies["]');
+                suppliesSelects.forEach(select => {
+                    select.value = ' '; 
+                });
                 
                 // We don't need to reload the page now that we've manually reset the dropdowns
             } else {

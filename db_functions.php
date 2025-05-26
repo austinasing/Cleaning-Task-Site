@@ -287,12 +287,13 @@ function updateSupplies($supplies) {
         if (!isset($supply['id']) || !isset($supply['collected'])) {
             continue;
         }
-        
+
         $supplyId = intval($supply['id']);
-        $collected = intval($supply['collected']); // Convert to 1 or 0
-        
-        $stmt->bind_param("ii", $collected, $supplyId);
-        
+        $collected = trim($supply['collected']);
+
+        // Bind parameters: 's' for string (collected), 'i' for integer (supplyId)
+        $stmt->bind_param("si", $collected, $supplyId);
+
         if (!$stmt->execute()) {
             $errors[] = "Error updating supply ID $supplyId: " . $stmt->error;
         }
@@ -406,16 +407,27 @@ function resetSupplies() {
         return ['success' => false, 'message' => 'Database connection error'];
     }
     
-    // Prepare the SQL statement to reset all supplies
-    $sql = "UPDATE supplies SET collected = 0 WHERE 1";
-    
+    // Prepare the SQL statement to reset all supplies to blank
+    $defaultStatus = ' ';
+    $sql = "UPDATE supplies SET collected = ? WHERE 1";
+    $stmt = $conn->prepare($sql);
+
+    if (!$stmt) {
+        return ['success' => false, 'message' => 'SQL prepare error for reset: ' . $conn->error];
+    }
+
+    $stmt->bind_param("s", $defaultStatus);
+
     // Execute the query
-    if ($conn->query($sql) === TRUE) {
-        return ['success' => true, 'message' => 'All supplies have been reset successfully'];
+    if ($stmt->execute()) {
+        $stmt->close();
+        return ['success' => true, 'message' => 'All supplies have been reset to "' . $defaultStatus . '" successfully'];
     } else {
+        $error = $stmt->error;
+        $stmt->close();
         return [
-            'success' => false, 
-            'message' => 'Error resetting supplies: ' . $conn->error
+            'success' => false,
+            'message' => 'Error resetting supplies: ' . $error
         ];
     }
 }
