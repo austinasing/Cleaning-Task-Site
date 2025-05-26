@@ -2,63 +2,115 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==========================================
     // Team Assignment Form Handling
     // ==========================================
-    const teamForm = document.getElementById('taskAssignmentForm');
-    
-    // Add submit event listener to the team form
-    if (teamForm) {
-        teamForm.addEventListener('submit', function(event) {
-            // Prevent the default form submission
+    const taskAssignmentForm = document.getElementById('taskAssignmentForm');
+    const taskAssignmentSuccessMessage = document.getElementById('taskAssignmentSuccessMessage');
+    const taskAssignmentErrorMessage = document.getElementById('taskAssignmentErrorMessage');
+
+
+    if (taskAssignmentForm) {
+        taskAssignmentForm.addEventListener('submit', function(event) {
             event.preventDefault();
             
-            // Collect all task-team assignments
-            const taskTeams = [];
-            const selects = document.querySelectorAll('.team-select');
-            
-            selects.forEach(select => {
-                taskTeams.push({
-                    taskId: select.name.match(/\d+/)[0], // Extract task ID from the name attribute
-                    teamId: select.value
+            const taskAssignments = [];
+            const taskRows = taskAssignmentForm.querySelectorAll('tbody tr');
+            let formIsValid = true;
+            let errorMessages = [];
+
+            taskRows.forEach(row => {
+                const taskId = row.getAttribute('data-task-id');
+                const member1Select = row.querySelector('select[name*="[member1]"]');
+                const member2Select = row.querySelector('select[name*="[member2]"]');
+                
+                const member1Id = member1Select ? member1Select.value : null;
+                const member2Id = member2Select ? member2Select.value : null;
+
+                // Basic validation: if one member is selected, the other can be empty, but they can't be the same if both are selected.
+                if (member1Id && member2Id && member1Id === member2Id) {
+                    formIsValid = false;
+                    // Highlight the row or selects
+                    member1Select.style.border = "2px solid red";
+                    member2Select.style.border = "2px solid red";
+                    const taskName = row.querySelector('td:first-child').textContent;
+                    errorMessages.push(`Task "${taskName}": Member 1 and Member 2 cannot be the same person.`);
+                } else {
+                    if (member1Select) member1Select.style.border = ""; // Reset border
+                    if (member2Select) member2Select.style.border = ""; // Reset border
+                }
+
+                taskAssignments.push({
+                    taskId: taskId,
+                    member1Id: member1Id,
+                    member2Id: member2Id
                 });
             });
+
+            if (!formIsValid) {
+                if (taskAssignmentErrorMessage) {
+                    taskAssignmentErrorMessage.innerHTML = errorMessages.join("<br>");
+                    taskAssignmentErrorMessage.style.display = 'block';
+                    if (taskAssignmentSuccessMessage) taskAssignmentSuccessMessage.style.display = 'none';
+                } else {
+                    alert("Validation Error:\n" + errorMessages.join("\n"));
+                }
+                // Hide error message after some time
+                setTimeout(() => {
+                    if (taskAssignmentErrorMessage) taskAssignmentErrorMessage.style.display = 'none';
+                }, 5000);
+                return; // Stop submission
+            }
             
-            // Send data to the server
-            updateTaskTeams(taskTeams);
+            if (taskAssignmentErrorMessage) taskAssignmentErrorMessage.style.display = 'none'; // Clear previous errors
+            updateTaskMemberAssignments(taskAssignments);
         });
     }
 
-    // Function to update task team assignments
-    function updateTaskTeams(taskTeams) {
+    function updateTaskMemberAssignments(taskAssignments) {
         const formData = new FormData();
-        formData.append('action', 'updateTasks');
-        formData.append('taskTeams', JSON.stringify(taskTeams));
+        formData.append('action', 'updateTasks'); // Corresponds to api_teams.php case
+        formData.append('taskAssignments', JSON.stringify(taskAssignments));
         
-        fetch('api_teams.php', {  // Updated endpoint
+        fetch('api_teams.php', {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Show success message
-                const successMessage = document.getElementById('teamSuccessMessage');
-                successMessage.style.display = 'block';
+                if (taskAssignmentSuccessMessage) {
+                    taskAssignmentSuccessMessage.textContent = 'Member assignments saved successfully!';
+                    taskAssignmentSuccessMessage.style.display = 'block';
+                }
+                if (taskAssignmentErrorMessage) taskAssignmentErrorMessage.style.display = 'none';
                 
-                // Hide success message after 3 seconds
                 setTimeout(() => {
-                    successMessage.style.display = 'none';
+                    if (taskAssignmentSuccessMessage) taskAssignmentSuccessMessage.style.display = 'none';
                 }, 3000);
                 
-                // Reload the page to refresh the subtask section with updated team assignments
                 setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+                    window.location.reload(); // Reload to see changes reflected everywhere
+                }, 1000); // Reload after 1 second to allow user to see success message
             } else {
-                alert('Error: ' + (data.message || 'An unknown error occurred'));
+                if (taskAssignmentErrorMessage) {
+                    taskAssignmentErrorMessage.textContent = 'Error: ' + (data.message || 'An unknown error occurred');
+                    taskAssignmentErrorMessage.style.display = 'block';
+                } else {
+                    alert('Error: ' + (data.message || 'An unknown error occurred'));
+                }
+                if (taskAssignmentSuccessMessage) taskAssignmentSuccessMessage.style.display = 'none';
+                setTimeout(() => {
+                    if (taskAssignmentErrorMessage) taskAssignmentErrorMessage.style.display = 'none';
+                }, 5000);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while updating the tasks.');
+            if (taskAssignmentErrorMessage) {
+                taskAssignmentErrorMessage.textContent = 'An error occurred while updating task assignments.';
+                taskAssignmentErrorMessage.style.display = 'block';
+            } else {
+                alert('An error occurred while updating task assignments.');
+            }
+            if (taskAssignmentSuccessMessage) taskAssignmentSuccessMessage.style.display = 'none';
         });
     }
     

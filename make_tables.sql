@@ -57,7 +57,6 @@ CREATE TABLE roommates (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     emoji VARCHAR(255) DEFAULT NULL,
-    team INTEGER
     );
     
 INSERT INTO roommates (name, team) VALUES
@@ -99,7 +98,8 @@ INSERT INTO supplies (item) VALUES
 CREATE TABLE taskteams(
     id INT AUTO_INCREMENT PRIMARY KEY,
     taskname VARCHAR(32) NOT NULL,
-    team_id INTEGER,
+    member_id1 INT,
+    member_id2 INT
 );
 
 INSERT INTO taskteams (taskname) VALUES

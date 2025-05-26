@@ -20,56 +20,36 @@ function getAllRoommates() {
     return $roommates;
 }
 
-// Gets all cleaning teams with their members
-function getTeams() {
-    global $conn;
-    
-    // Check if connection exists
-    if (!$conn) {
-        return []; // Return empty array instead of dying to prevent errors
-    }
-    
-    $teams = [];
-    
-    $sql = "SELECT team, GROUP_CONCAT(name SEPARATOR ' & ') as members 
-            FROM roommates 
-            WHERE team IS NOT NULL 
-            GROUP BY team 
-            ORDER BY team";
-            
-    $result = $conn->query($sql);
-    
-    if ($result && $result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $teams[$row['team']] = $row['members'];
-        }
-    }
-    
-    return $teams;
-}
-
-// Gets all tasks with their assigned teams
+// Gets all tasks with their assigned members
 function getTasks() {
     global $conn;
     
-    // Check if connection exists
     if (!$conn) {
-        return []; // Return empty array instead of dying
+        return [];
     }
     
     $tasks = [];
     
-    $sql = "SELECT t.id, t.taskname, t.team_id, 
-            GROUP_CONCAT(r.name SEPARATOR ' & ') as team_members 
-            FROM taskteams t 
-            LEFT JOIN roommates r ON t.team_id = r.team 
-            GROUP BY t.id 
-            ORDER BY t.id";
+    $sql = "SELECT tt.id, tt.taskname, tt.member1_id, tt.member2_id,
+                   r1.name as member1_name, r2.name as member2_name
+            FROM taskteams tt
+            LEFT JOIN roommates r1 ON tt.member1_id = r1.id
+            LEFT JOIN roommates r2 ON tt.member2_id = r2.id
+            ORDER BY tt.id";
             
     $result = $conn->query($sql);
     
     if ($result && $result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
+            $team_members_arr = [];
+            if ($row['member1_name']) {
+                $team_members_arr[] = $row['member1_name'];
+            }
+            if ($row['member2_name']) {
+                $team_members_arr[] = $row['member2_name'];
+            }
+            // Ensure team_members is always a string, even if empty or only one member
+            $row['team_members'] = implode(' & ', $team_members_arr); 
             $tasks[] = $row;
         }
     }
@@ -94,7 +74,8 @@ function getAllTasksWithSubtasks() {
         $task = [
             'id' => $baseTask['id'],
             'taskname' => $baseTask['taskname'],
-            'team_id' => $baseTask['team_id'],
+            'member1_id' => $baseTask['member1_id'],
+            'member2_id' => $baseTask['member2_id'],
             'team_members' => !empty($baseTask['team_members']) ? explode(' & ', $baseTask['team_members']) : [],
             'subtasks' => []
         ];
@@ -184,13 +165,11 @@ function getLateTasks() {
 function updateTaskTeams($taskTeams) {
     global $conn;
     
-    // Check if connection exists
     if (!$conn) {
         return ['success' => false, 'message' => 'Database connection error'];
     }
     
-    // Prepare the statement once
-    $sql = "UPDATE taskteams SET team_id = ? WHERE id = ?";
+    $sql = "UPDATE taskteams SET member1_id = ?, member2_id = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
     
     if (!$stmt) {
@@ -199,16 +178,23 @@ function updateTaskTeams($taskTeams) {
     
     $errors = [];
     
-    // Execute for each task-team pair
     foreach ($taskTeams as $task) {
-        if (!isset($task['taskId']) || !isset($task['teamId'])) {
+        if (!isset($task['taskId'])) {
             continue;
         }
         
         $taskId = intval($task['taskId']);
-        $teamId = $task['teamId'] !== '' ? intval($task['teamId']) : NULL;
+        // Use null if memberId is empty string or not set, otherwise intval
+        $member1Id = (isset($task['member1Id']) && $task['member1Id'] !== '') ? intval($task['member1Id']) : NULL;
+        $member2Id = (isset($task['member2Id']) && $task['member2Id'] !== '') ? intval($task['member2Id']) : NULL;
+
+        // add a check here: $member1Id should not be equal to $member2Id if both are set.
+        if ($member1Id !== NULL && $member1Id === $member2Id) {
+            $errors[] = "Error updating task ID $taskId: Member 1 and Member 2 cannot be the same person.";
+            continue;
+        }
         
-        $stmt->bind_param("ii", $teamId, $taskId);
+        $stmt->bind_param("iii", $member1Id, $member2Id, $taskId);
         
         if (!$stmt->execute()) {
             $errors[] = "Error updating task ID $taskId: " . $stmt->error;
@@ -223,7 +209,6 @@ function updateTaskTeams($taskTeams) {
         return ['success' => true];
     }
 }
-
 // Updates sign-offs for subtasks
 function updateSubtaskSignatures($taskId, $signatures) {
     global $conn;
@@ -246,8 +231,10 @@ function updateSubtaskSignatures($taskId, $signatures) {
     // Execute for each subtask-signature pair
     foreach ($signatures as $subtaskId => $signature) {
         $subtaskId = intval($subtaskId);
-        
-        $stmt->bind_param("si", $signature, $subtaskId);
+        // Allow signature to be NULL if empty string is passed
+        $sigValue = ($signature !== '') ? $signature : NULL;
+
+        $stmt->bind_param("si", $sigValue, $subtaskId);
         
         if (!$stmt->execute()) {
             $errors[] = "Error updating subtask ID $subtaskId: " . $stmt->error;

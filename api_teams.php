@@ -1,10 +1,5 @@
 <?php
-/**
- * api_teams.php
- * 
- * API endpoint for team-related operations.
- * This file handles requests related to team assignments.
- */
+//handles requests related to team assignments.
 
 require_once 'db_functions.php';
 
@@ -16,9 +11,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Handle GET requests
     if (isset($_GET['action'])) {
         switch($_GET['action']) {
-            case 'getTeams':
-                echo json_encode(getTeams());
-                break;
             case 'getTasks':
                 echo json_encode(getTasks());
                 break;
@@ -41,7 +33,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
         switch($_POST['action']) {
             case 'updateTasks':
                 // Decode the JSON data from the form
-                $taskTeams = isset($_POST['taskTeams']) ? json_decode($_POST['taskTeams'], true) : [];
+                $taskAssignments = isset($_POST['taskAssignments']) ? json_decode($_POST['taskAssignments'], true) : [];
                 
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     echo json_encode([
@@ -49,7 +41,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'message' => 'Invalid JSON data: ' . json_last_error_msg()
                     ]);
                 } else {
-                    $result = updateTaskTeams($taskTeams);
+                    $result = updateTaskTeams($taskAssignments);
                     echo json_encode($result);
                 }
                 break;

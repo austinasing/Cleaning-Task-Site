@@ -9,7 +9,6 @@ error_reporting(E_ALL);
 require_once 'db_functions.php';
 
 // Get all the data needed for the page
-$teams = getTeams();
 $tasks = getTasks();
 $tasksWithSubtasks = getAllTasksWithSubtasks();
 $supplies = getSupplies();
@@ -36,7 +35,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
         <h2>Sign off on your task!</h2>
         
         <?php if (empty($tasksWithSubtasks)): ?>
-            <p>No tasks found or no teams assigned to tasks yet.</p>
+            <p>No tasks found or no members assigned to tasks yet.</p>
         <?php else: ?>
             <?php foreach ($tasksWithSubtasks as $task): ?>
                 <div class="task-container" id="task-<?= $task['id'] ?>">
@@ -44,14 +43,14 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                         <div class="task-title"><?= htmlspecialchars($task['taskname']) ?></div>
                         <?php if (!empty($task['team_members'])): ?>
                             <div class="team-info">
-                                Assigned Team: 
+                                Assigned: 
                                 <?php foreach ($task['team_members'] as $index => $member): ?>
                                     <span class="team-member"><?= htmlspecialchars($member) ?></span>
                                     <?php if ($index < count($task['team_members']) - 1): ?> & <?php endif; ?>
                                 <?php endforeach; ?>
                             </div>
                         <?php else: ?>
-                            <div class="team-info">No team assigned yet</div>
+                            <div class="team-info">No members assigned yet</div>
                         <?php endif; ?>
                     </div>
                     
@@ -62,7 +61,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                     <?php if (empty($task['subtasks'])): ?>
                         <p>No subtasks found for this task.</p>
                     <?php elseif (empty($task['team_members'])): ?>
-                        <p>Please assign a team to this task first.</p>
+                        <p>Please assign members to this task first.</p>
                     <?php else: ?>
                         <form class="subtask-form" data-task-id="<?= $task['id'] ?>">
                             <table>
@@ -79,7 +78,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                             <td>
                                                 <select name="signature[<?= $subtask['id'] ?>]" class="person-select">
                                                     <option value="">-- Select Person --</option>
-                                                    <?php foreach ($task['team_members'] as $member): ?>
+                                                    <?php foreach ($task['team_members'] as $member): // These are the assigned members to the main task ?>
                                                         <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
                                                             <?= htmlspecialchars($member) ?>
                                                         </option>
@@ -91,7 +90,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 </tbody>
                             </table>
                             
-                            <button type="submit">Submit task sign off</button>
+                            <button type="submit">Submit</button>
                         </form>
                     <?php endif; ?>
                 </div>
@@ -100,19 +99,22 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
     </div>
 
     <!-- Task Team Assignment Section -->
-    <div class="section" id="team-assignment-section">
-        <h2>Assign Teams to Tasks</h2>
+    <div class="section" id="member-assignment-section">
+        <h2>Assign Members to Tasks</h2>
         
-        <div id="teamSuccessMessage" class="message success">
-            Team assignments saved successfully!
+        <div id="taskAssignmentSuccessMessage" class="message success">
+            Member assignments saved successfully!
         </div>
+        <div id="taskAssignmentErrorMessage" class="message error">
+            </div>
         
         <form id="taskAssignmentForm">
             <table id="taskTable">
                 <thead>
                     <tr>
                         <th>Task</th>
-                        <th>Assigned Team</th>
+                        <th>Member 1</th>
+                        <th>Member 2</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -120,11 +122,21 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                     <tr data-task-id="<?= $task['id'] ?>">
                         <td><?= htmlspecialchars($task['taskname']) ?></td>
                         <td>
-                            <select class="team-select" name="tasks[<?= $task['id'] ?>]">
-                                <option value="">-- Select Team --</option>
-                                <?php foreach($teams as $teamId => $teamMembers): ?>
-                                    <option value="<?= $teamId ?>" <?= ($teamId == $task['team_id']) ? 'selected' : '' ?>>
-                                        Team <?= $teamId ?>: <?= htmlspecialchars($teamMembers) ?>
+                            <select class="member-select" name="tasks[<?= $task['id'] ?>][member1]">
+                                <option value="">-- Select Member 1 --</option>
+                                <?php foreach($allRoommates as $roommate): ?>
+                                    <option value="<?= $roommate['id'] ?>" <?= ($roommate['id'] == $task['member1_id']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($roommate['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="member-select" name="tasks[<?= $task['id'] ?>][member2]">
+                                <option value="">-- Select Member 2 --</option>
+                                <?php foreach($allRoommates as $roommate): ?>
+                                    <option value="<?= $roommate['id'] ?>" <?= ($roommate['id'] == $task['member2_id']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($roommate['name']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -134,7 +146,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                 </tbody>
             </table>
             
-            <button type="submit" id="saveTeamButton">Save Team Assignments</button>
+            <button type="submit" id="saveTaskAssignmentButton">Save Member Assignments</button>
         </form>
     </div>
     
@@ -259,7 +271,6 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <?php endif; ?>
         </ul>
     </div>
-
 
     <!-- Reset Section -->
     <div class="section" id="reset-section">
