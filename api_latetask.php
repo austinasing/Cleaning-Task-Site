@@ -1,6 +1,8 @@
 <?php
 // Handles requests for late tasks
 
+require_once 'auth_check.php';
+ensureUserIsLoggedInApi(); // Check session login for submission
 require_once 'db_functions.php';
 
 header('Content-Type: application/json');

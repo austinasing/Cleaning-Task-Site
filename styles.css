@@ -1,3 +1,75 @@
 .message {
             display: none;
         }
+.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.top-login-form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+.top-login-form .form-container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+.top-login-form h2 {
+    text-align: center;
+    margin-bottom: 15px;
+}
+.top-login-form label {
+    display: block;
+    margin-bottom: 5px;
+}
+.top-login-form input[type="text"],
+.top-login-form input[type="password"] {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+.top-login-form .remember-me {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+.top-login-form .remember-me input { margin-right: 5px; }
+.top-login-form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.top-login-form button:hover { background-color: #0056b3; }
+.login-error {
+    color: red;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+.user-info-bar {
+    background-color: #e9ecef;
+    padding: 10px 20px;
+    text-align: right;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+.user-info-bar span { margin-right: 15px; }
+.user-info-bar a {
+    padding: 8px 15px;
+    background-color: #dc3545;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+    .user-info-bar a:hover { background-color: #c82333; }

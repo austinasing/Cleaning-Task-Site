@@ -1,6 +1,8 @@
 <?php
 //handles requests to reset data for a new week
 
+require_once 'auth_check.php';
+ensureUserIsLoggedInApi(); // Check session login for submission
 require_once 'db_functions.php';
 
 // Set content type to JSON for all responses
