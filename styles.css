@@ -6,70 +6,89 @@
     color: #155724;
     border: 1px solid #c3e6cb;
 }
-.top-login-form {
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 20px;
-}
-.top-login-form .form-container {
-    max-width: 400px;
-    margin: 0 auto;
-}
-.top-login-form h2 {
-    text-align: center;
-    margin-bottom: 15px;
-}
-.top-login-form label {
-    display: block;
-    margin-bottom: 5px;
-}
-.top-login-form input[type="text"],
-.top-login-form input[type="password"] {
-    width: calc(100% - 22px);
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-}
-.top-login-form .remember-me {
-    margin-bottom: 15px;
+.status-bar {
+            background-color: #e9ecef;
+            padding: 10px 20px;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+.status-bar .login-area form {
     display: flex;
     align-items: center;
+    gap: 10px;
 }
-.top-login-form .remember-me input { margin-right: 5px; }
-.top-login-form button {
-    width: 100%;
-    padding: 10px;
+.status-bar .login-area input[type="text"],
+.status-bar .login-area input[type="password"] {
+    padding: 5px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+.status-bar .login-area button {
+    padding: 5px 10px;
+    font-size: 0.9em;
+}
+.status-bar .user-info span {
+    margin-right: 15px;
+}
+.status-bar .user-info a, 
+.status-bar .login-area button {
+    padding: 6px 12px;
     background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-.top-login-form button:hover { background-color: #0056b3; }
-.login-error {
-    color: red;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    padding: 10px;
-    border-radius: 4px;
-    text-align: center;
-    margin-bottom: 15px;
-}
-.user-info-bar {
-    background-color: #e9ecef;
-    padding: 10px 20px;
-    text-align: right;
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 20px;
-}
-.user-info-bar span { margin-right: 15px; }
-.user-info-bar a {
-    padding: 8px 15px;
-    background-color: #dc3545;
     color: white;
     text-decoration: none;
     border-radius: 4px;
+    border: none;
+    cursor: pointer;
 }
-    .user-info-bar a:hover { background-color: #c82333; }
+.status-bar .user-info a:hover, 
+.status-bar .login-area button:hover {
+    background-color: #0056b3;
+}
+    .status-bar .user-info a.logout {
+    background-color: #dc3545;
+    }
+    .status-bar .user-info a.logout:hover {
+    background-color: #c82333;
+    }
+.login-error-top {
+    color: red;
+    font-size: 0.9em;
+    margin-right: 15px;
+}
+.remember-me-top label {
+    font-size: 0.9em;
+    margin-left: 2px;
+    cursor: pointer;
+}
+.remember-me-top input[type="checkbox"] {
+    vertical-align: middle;
+}
+/* General message styles (ensure these are effective) */
+.message {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+}
+.message.success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+.message.error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+select:disabled {
+    background-color: #eeeeee;
+    cursor: not-allowed;
+}
