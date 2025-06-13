@@ -92,3 +92,13 @@ select:disabled {
     background-color: #eeeeee;
     cursor: not-allowed;
 }
+
+.task-group-container { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;}
+.task-group-container .task-header { margin-bottom: 15px; }
+.multi-column-task-table { width: 100%; border-collapse: collapse; margin-bottom:10px; }
+.multi-column-task-table th, .multi-column-task-table td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top;}
+.multi-column-task-table th { background-color: #f0f0f0; }
+.multi-column-task-table .team-info-header { font-size: 0.9em; color: #555; font-weight: normal; display:block; margin-bottom:5px;}
+.multi-column-task-table .subtask-form button { margin-top: 5px; font-size: 0.9em; padding: 4px 8px;}
+.subtask-form { display: inline; }
+.task-container { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }

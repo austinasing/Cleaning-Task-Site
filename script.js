@@ -1,3 +1,5 @@
+// script.js
+
 document.addEventListener('DOMContentLoaded', function () {
   // ==========================================
   // Team Assignment Form Handling
@@ -101,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (data.success) {
           if (taskAssignmentSuccessMessage) {
             taskAssignmentSuccessMessage.textContent =
-              'Member assignments saved successfully!';
+              data.message || 'Member assignments saved successfully!'; // Use server message
             taskAssignmentSuccessMessage.style.display = 'block';
           }
           if (taskAssignmentErrorMessage)
@@ -112,9 +114,10 @@ document.addEventListener('DOMContentLoaded', function () {
               taskAssignmentSuccessMessage.style.display = 'none';
           }, 3000);
 
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
+          // Optionally reload to see changes reflected, especially team names in subtask section
+           setTimeout(() => {
+             window.location.reload();
+           }, 1000); // Reload after 1 second to allow message to be seen
         } else {
           if (taskAssignmentErrorMessage) {
             taskAssignmentErrorMessage.textContent =
@@ -146,34 +149,82 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ==========================================
-  // Subtask Assignment Forms Handling
+  // Subtask Assignment Forms Handling (MODIFIED)
   // ==========================================
   const subtaskForms = document.querySelectorAll('.subtask-form');
 
   subtaskForms.forEach((form) => {
     form.addEventListener('submit', function (event) {
       event.preventDefault();
-      const taskId = this.getAttribute('data-task-id');
+      const currentForm = event.target; 
+      const taskId = currentForm.getAttribute('data-task-id'); // This is taskteams.id
+      const taskVariantName = currentForm.getAttribute('data-task-variant-name'); // e.g., 'kitchen_thurs'
+
       const signatures = {};
-      const selects = this.querySelectorAll('.person-select');
-      selects.forEach((select) => {
-        const subtaskIdMatch = select.name.match(/\d+/);
+      let selectsToProcess;
+
+      if (taskVariantName) {
+        // For layouts where selects are NOT children of the form, but associated by data-task-variant-name
+        // This targets selects anywhere in the document with the matching variant name.
+        // Ensure your HTML structure allows these selects to be globally unique if needed,
+        // or narrow the querySelector if they are within a common parent of the form and selects.
+        // For the provided index.php, selects are in a table, and forms are in table headers.
+        // A common ancestor is the .task-group-container or .task-container
+        const container = currentForm.closest('.task-group-container, .task-container');
+        if (container) {
+            selectsToProcess = container.querySelectorAll(
+              `select.person-select[data-task-variant-name="${taskVariantName}"]`
+            );
+        } else {
+            // Fallback if container not found, though less precise
+            selectsToProcess = document.querySelectorAll(
+              `select.person-select[data-task-variant-name="${taskVariantName}"]`
+            );
+            console.warn(`Subtask form for ${taskVariantName} (ID: ${taskId}) is not within expected container. Searching selects globally.`);
+        }
+      } else {
+        // Fallback for forms where selects are direct children (original behavior)
+        selectsToProcess = currentForm.querySelectorAll('select.person-select');
+      }
+      
+      if (!selectsToProcess || selectsToProcess.length === 0) {
+        console.warn(`No selects found for task ID: ${taskId}` + (taskVariantName ? ` (variant: ${taskVariantName})` : '') + `. Check data-task-variant-name attributes and DOM structure.`);
+      }
+
+      selectsToProcess.forEach((select) => {
+        const subtaskIdMatch = select.name.match(/\d+/); 
         if (subtaskIdMatch) {
-            const subtaskId = subtaskIdMatch[0];
+          const subtaskId = subtaskIdMatch[0];
+          if (!select.disabled) { // Only collect from enabled selects
             signatures[subtaskId] = select.value;
+          }
         }
       });
-      updateSubtaskSignatures(taskId, signatures);
+
+      if (Object.keys(signatures).length > 0) {
+        updateSubtaskSignatures(taskId, signatures); // taskId is taskteams.id
+      } else {
+        console.log("No signatures with values collected to submit for task ID: " + taskId + (taskVariantName ? ` (variant: ${taskVariantName})` : ""));
+        // Optionally show a "no changes" message or the success message briefly
+         const successMessage = document.querySelector(`.subtask-success-message-${taskId}`);
+          if (successMessage) {
+            successMessage.textContent = 'No changes to submit or all signed off.';
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+              successMessage.style.display = 'none';
+            }, 2000);
+          }
+      }
     });
   });
 
   function updateSubtaskSignatures(taskId, signatures) {
     const formData = new FormData();
     formData.append('action', 'updateSignatures');
-    formData.append('taskId', taskId);
+    formData.append('taskId', taskId); // This is taskteams.id
     formData.append('signatures', JSON.stringify(signatures));
 
-    fetch('api_tasks.php', {
+    fetch('api_tasks.php', { //
       method: 'POST',
       body: formData,
     })
@@ -195,9 +246,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (data.success) {
           const successMessage = document.querySelector(
-            `.subtask-success-message-${taskId}`
+            `.subtask-success-message-${taskId}` // taskId is taskteams.id
           );
           if (successMessage) {
+            successMessage.textContent = data.message || 'Assignments saved successfully!';
             successMessage.style.display = 'block';
             setTimeout(() => {
               successMessage.style.display = 'none';
@@ -225,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function () {
       event.preventDefault();
       const supplies = [];
       const selects = document.querySelectorAll(
-        '#suppliesForm select[name^="supplies["]' // More specific selector
+        '#suppliesForm select[name^="supplies["]' 
       );
       selects.forEach((select) => {
          const supplyIdMatch = select.name.match(/\d+/);
@@ -246,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function () {
     formData.append('action', 'updateSupplies');
     formData.append('supplies', JSON.stringify(supplies));
 
-    fetch('api_supplies.php', {
+    fetch('api_supplies.php', { //
       method: 'POST',
       body: formData,
     })
@@ -267,7 +319,8 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
         if (data.success) {
-          if (suppliesSuccessMessage) { // Check if element exists
+          if (suppliesSuccessMessage) { 
+            suppliesSuccessMessage.textContent = data.message || 'Supplies updated successfully!';
             suppliesSuccessMessage.style.display = 'block';
             setTimeout(() => {
               suppliesSuccessMessage.style.display = 'none';
@@ -313,27 +366,38 @@ document.addEventListener('DOMContentLoaded', function () {
       }, 3000);
     }
   }
-
-  function addLateTaskToUI(lateTask) {
-    if (!lateTasksList) return; // Guard clause
-    const listItem = document.createElement('li');
-    listItem.setAttribute('data-id', lateTask.id);
-    listItem.innerHTML = `<strong>${escapeHTML(
-      lateTask.name
-    )}</strong> (${escapeHTML(lateTask.day)}): ${escapeHTML(lateTask.task)} `;
-    lateTasksList.appendChild(listItem);
-    const noItemsMessage = document.getElementById('no-late-tasks');
-    if (noItemsMessage) {
-      noItemsMessage.remove();
-    }
-  }
-
+  
   function escapeHTML(str) {
     if (str === null || str === undefined) return '';
     const div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
   }
+
+  function addLateTaskToUI(lateTask) {
+    if (!lateTasksList) return; 
+    const listItem = document.createElement('li');
+    listItem.setAttribute('data-id', lateTask.id);
+    listItem.innerHTML = `<strong>${escapeHTML(
+      lateTask.name
+    )}</strong> (${escapeHTML(lateTask.day)}): ${escapeHTML(lateTask.task)} `;
+    
+    // Add to the top of the list if you want newest first
+    if (lateTasksList.firstChild && lateTasksList.firstChild.id === 'no-late-tasks') {
+        lateTasksList.innerHTML = ''; // Clear "no late tasks" message
+        lateTasksList.appendChild(listItem);
+    } else if (lateTasksList.firstChild) {
+        lateTasksList.insertBefore(listItem, lateTasksList.firstChild);
+    } else {
+        lateTasksList.appendChild(listItem);
+    }
+    
+    const noItemsMessage = document.getElementById('no-late-tasks');
+    if (noItemsMessage && lateTasksList.children.length > 1) { // If more than just the "no items" message
+      noItemsMessage.remove();
+    }
+  }
+
 
   if (addLateTaskForm) {
     addLateTaskForm.addEventListener('submit', function (event) {
@@ -356,7 +420,7 @@ document.addEventListener('DOMContentLoaded', function () {
       formData.append('day', day);
       formData.append('task', task);
 
-      fetch('api_latetask.php', {
+      fetch('api_latetask.php', { //
         method: 'POST',
         body: formData,
       })
@@ -433,10 +497,14 @@ document.addEventListener('DOMContentLoaded', function () {
       messageElement.style.display = 'block';
       messageElement.className = isSuccess
         ? 'message success'
-        : 'message error';
+        : 'message error'; // Ensure class is set for error messages too
       setTimeout(() => {
         messageElement.style.display = 'none';
       }, 3000);
+    } else if (isSuccess) { // Fallback for success if element is missing
+        alert(message);
+    } else { // Fallback for error
+        alert("Error: " + message);
     }
   }
 
@@ -444,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const formData = new FormData();
     formData.append('action', 'resetAllLateTasks');
 
-    fetch('api_reset.php', {
+    fetch('api_reset.php', { //
       method: 'POST',
       body: formData,
     })
@@ -466,14 +534,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (data.success) {
           displayResetLateTasksMessage(data.message, true);
-          if (lateTasksList) { // Check if lateTasksList exists
-            while (lateTasksList.firstChild) {
-              lateTasksList.removeChild(lateTasksList.firstChild);
-            }
-            const noItemsMessage = document.createElement('li');
-            noItemsMessage.id = 'no-late-tasks';
-            noItemsMessage.textContent = 'No late tasks recorded.';
-            lateTasksList.appendChild(noItemsMessage);
+          if (lateTasksList) { 
+            lateTasksList.innerHTML = '<li id="no-late-tasks">No late tasks recorded.</li>'; // Simpler way to reset
           }
         } else {
           displayResetLateTasksMessage(
@@ -506,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const messageElement = isSuccess
       ? wishlistSuccessMessage
       : wishlistErrorMessage;
-    if (messageElement) { // Check if element exists
+    if (messageElement) { 
         messageElement.textContent = message;
         messageElement.style.display = 'block';
         messageElement.className = isSuccess
@@ -517,30 +579,43 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 3000);
     }
   }
-
+  
   function addWishlistItemToUI(item) {
-    if (!wishlistItemsList) return; // Guard clause
+    if (!wishlistItemsList) return; 
     const listItem = document.createElement('li');
     listItem.setAttribute('data-id', item.id);
     listItem.textContent = escapeHTML(item.item) + ' ';
 
     const deleteButton = document.createElement('button');
     deleteButton.textContent = 'Delete';
-    deleteButton.className = 'delete-wishlist-item';
+    deleteButton.className = 'delete-wishlist-item'; // Add class for potential styling/selection
     deleteButton.setAttribute('data-id', item.id);
 
     deleteButton.addEventListener('click', function () {
-      handleDeleteWishlistItem(item.id);
+      // Confirm before deleting
+      if (confirm(`Are you sure you want to delete "${escapeHTML(item.item)}" from the wishlist?`)) {
+        handleDeleteWishlistItem(item.id);
+      }
     });
 
     listItem.appendChild(deleteButton);
-    wishlistItemsList.appendChild(listItem);
+    
+    // Add to the top of the list if you want newest first
+    if (wishlistItemsList.firstChild && wishlistItemsList.firstChild.id === 'no-wishlist-items') {
+        wishlistItemsList.innerHTML = ''; // Clear "no items" message
+        wishlistItemsList.appendChild(listItem);
+    } else if (wishlistItemsList.firstChild) {
+        wishlistItemsList.insertBefore(listItem, wishlistItemsList.firstChild);
+    } else {
+        wishlistItemsList.appendChild(listItem);
+    }
 
     const noItemsMessage = document.getElementById('no-wishlist-items');
-    if (noItemsMessage) {
-      noItemsMessage.remove();
+    if (noItemsMessage && wishlistItemsList.children.length > 1) { // If more than just the "no items" message
+        noItemsMessage.remove();
     }
   }
+
 
   if (addWishlistItemForm) {
     addWishlistItemForm.addEventListener('submit', function (event) {
@@ -556,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function () {
       formData.append('action', 'addWishlistItem');
       formData.append('item', itemName);
 
-      fetch('api_supplies.php', {
+      fetch('api_supplies.php', { //
         method: 'POST',
         body: formData,
       })
@@ -578,7 +653,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }
           if (data.success && data.item) {
             addWishlistItemToUI(data.item);
-            if(wishlistItemNameInput) wishlistItemNameInput.value = '';
+            if(wishlistItemNameInput) wishlistItemNameInput.value = ''; // Clear input
             displayWishlistMessage(data.message, true);
           } else {
             displayWishlistMessage(data.message || 'Could not add item.', false);
@@ -599,7 +674,7 @@ document.addEventListener('DOMContentLoaded', function () {
     formData.append('action', 'deleteWishlistItem');
     formData.append('itemId', itemId);
 
-    fetch('api_supplies.php', {
+    fetch('api_supplies.php', { //
       method: 'POST',
       body: formData,
     })
@@ -620,7 +695,7 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
         if (data.success) {
-          if (wishlistItemsList) { // Check if element exists
+          if (wishlistItemsList) { 
             const itemElement = wishlistItemsList.querySelector(
               `li[data-id="${itemId}"]`
             );
@@ -628,10 +703,7 @@ document.addEventListener('DOMContentLoaded', function () {
               itemElement.remove();
             }
             if (wishlistItemsList.children.length === 0) {
-              const noItemsMessage = document.createElement('li');
-              noItemsMessage.id = 'no-wishlist-items';
-              noItemsMessage.textContent = 'No items in the wishlist yet.';
-              wishlistItemsList.appendChild(noItemsMessage);
+              wishlistItemsList.innerHTML = '<li id="no-wishlist-items">No items in the wishlist yet.</li>';
             }
           }
           displayWishlistMessage(data.message, true);
@@ -651,10 +723,13 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
+  // Add event listeners to initially loaded delete buttons
   document.querySelectorAll('.delete-wishlist-item').forEach((button) => {
     button.addEventListener('click', function () {
       const itemId = this.getAttribute('data-id');
-      handleDeleteWishlistItem(itemId);
+      if (confirm(`Are you sure you want to delete this item from the wishlist?`)) {
+          handleDeleteWishlistItem(itemId);
+      }
     });
   });
 
@@ -664,8 +739,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const resetSignaturesButton = document.getElementById(
     'resetAllSignaturesButton'
   );
-  const resetSignaturesSuccessMessage = document.getElementById( // Added for consistency
-    'resetSignaturesSuccessMessage'
+  const resetSignaturesSuccessMessage = document.getElementById( 
+    'resetSignaturesSuccessMessage' 
   );
 
 
@@ -685,7 +760,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const formData = new FormData();
     formData.append('action', 'resetAllSignatures');
 
-    fetch('api_reset.php', {
+    fetch('api_reset.php', { //
       method: 'POST',
       body: formData,
     })
@@ -706,14 +781,18 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
         if (data.success) {
-          if (resetSignaturesSuccessMessage) { // Check if element exists
+          if (resetSignaturesSuccessMessage) { 
+            resetSignaturesSuccessMessage.textContent = data.message || "All signatures reset!";
             resetSignaturesSuccessMessage.style.display = 'block';
             setTimeout(() => {
               resetSignaturesSuccessMessage.style.display = 'none';
             }, 3000);
+          } else {
+            alert(data.message || "All signatures reset!");
           }
+          // Clear all select dropdowns for signatures
           document.querySelectorAll('.person-select').forEach((select) => {
-            select.value = '';
+            select.value = ''; 
           });
         } else {
           alert('Error: ' + (data.message || 'An unknown error occurred'));
@@ -729,7 +808,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Reset Supplies Button Handling
   // ==========================================
   const resetSuppliesButton = document.getElementById('resetSuppliesButton');
-  const resetSuppliesSuccessMessage = document.getElementById( // Added for consistency
+  const resetSuppliesSuccessMessage = document.getElementById( 
     'resetSuppliesSuccessMessage'
   );
 
@@ -750,7 +829,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const formData = new FormData();
     formData.append('action', 'resetSupplies');
 
-    fetch('api_reset.php', {
+    fetch('api_reset.php', { //
       method: 'POST',
       body: formData,
     })
@@ -771,17 +850,21 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
         if (data.success) {
-          if (resetSuppliesSuccessMessage) { // Check if element exists
+          if (resetSuppliesSuccessMessage) { 
+            resetSuppliesSuccessMessage.textContent = data.message || "Supplies reset!";
             resetSuppliesSuccessMessage.style.display = 'block';
             setTimeout(() => {
               resetSuppliesSuccessMessage.style.display = 'none';
             }, 3000);
+          } else {
+             alert(data.message || "Supplies reset!");
           }
+          // Reset all supply dropdowns to the default empty/blank value
           const suppliesSelects = document.querySelectorAll(
             '#suppliesForm select[name^="supplies["]'
           );
           suppliesSelects.forEach((select) => {
-            select.value = ' ';
+            select.value = ' '; // Assuming ' ' is the default "not set" value
           });
         } else {
           alert('Error: ' + (data.message || 'An unknown error occurred'));
@@ -789,7 +872,7 @@ document.addEventListener('DOMContentLoaded', function () {
       })
       .catch((error) => {
         console.error('Error:', error);
-        alert('An error occurred while resetting supplies.'); // Changed message for clarity
+        alert('An error occurred while resetting supplies.'); 
       });
   }
 });
