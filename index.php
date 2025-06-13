@@ -627,6 +627,20 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
         <button id="resetAllLateTasksButton" class="danger-button" <?php if (!$is_logged_in) echo 'disabled title="Log in to use reset functions"'; ?>>Reset All Late Tasks</button>
     </div>
 
+    <div class="section" id="summary-section">
+        <h2 class='section-title'>End of Week Summary</h2>
+        <button id="showSummaryButton" class="summary-btn">Show Summary</button>
+    </div>
+
+    <div id="summaryModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="summary-title">Weekly Summary</h2>
+            <div id="summaryContent">
+                </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

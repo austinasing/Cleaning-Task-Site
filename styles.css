@@ -20,7 +20,6 @@ h1 {
 }
 
 
-
 .section {
     background-color: white;
     padding: 15px;
@@ -131,6 +130,18 @@ select:disabled {
     cursor: not-allowed;
 }
 
+select.complete {
+    background-color: #d4edda !important; /* Light green */
+    color: #155724 !important;
+    border: 1px solid #c3e6cb;
+}
+
+select.incomplete {
+    background-color: #f8d7da !important; /* Light red */
+    color: #721c24 !important;
+    border: 1px solid #f5c6cb;
+}
+
 .task-title {
     display: inline;
     text-decoration: underline;
@@ -157,7 +168,13 @@ select:disabled {
     margin-top: 10px;
 }
 
-#supplies-section, #member-assignment-section form {
+#supplies-section form, #member-assignment-section form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#summary-section {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -196,7 +213,99 @@ select:disabled {
     overflow-wrap: break-word; /* Wraps long text to the next line */
 }
 
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+}
+/* Modal Content */
+.modal-content {
+    margin: 0 auto;
+    background-color: #fefefe;
+    padding: 10px;
+    border: 1px solid #888;
+    width: 90%; /* Responsive width */
+    max-width: 375px;
+    border-radius: 8px;
+    font-size: 10px; /* Smaller base font for mobile */
+}
+
+/* The Close Button */
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Summary content styles */
+#summary-title {
+    margin-block-start: 0px;
+    margin-block-end: 5px;
+    text-align: center;
+}
+
+#summaryContent p {
+    margin-block-start: 5px;
+    margin-block-end: 0px;
+    text-align: center;
+}
+
+#summaryContent h3 {
+    font-size: 1.2em;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0px;
+    text-align: center;
+}
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em; /* Smaller font for table content */
+}
+.summary-table th, .summary-table td {
+    border: 1px solid #ddd;
+    padding: 2px; /* Minimal padding */
+    text-align: left;
+}
+.summary-table th {
+    background-color: #f2f2f2;
+}
+
+.summary-text-complete {
+    color: #155724;
+    font-weight: bold;
+}
+.summary-text-incomplete {
+    color: #721c24;
+    font-weight: bold;
+}
+
+
+
 /* --- Mobile --- */
+
+@media (min-width: 600px) {
+    body {
+        width: 50%;
+        margin: 0 auto;
+    }
+}
 
 @media (max-width: 600px) {
 

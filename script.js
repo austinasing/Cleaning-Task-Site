@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ==========================================
-  // Subtask Assignment Forms Handling (MODIFIED)
+  // Subtask Assignment Forms Handling 
   // ==========================================
   const subtaskForms = document.querySelectorAll('.subtask-form');
 
@@ -333,6 +333,30 @@ document.addEventListener('DOMContentLoaded', function () {
         alert('An error occurred while updating the supplies.');
       });
   }
+
+  // Status color Coding
+  function updateSelectColors() {
+    // Target both subtask and supply selects
+    document.querySelectorAll('.person-select, .supply-status-select').forEach(select => {
+      // A value is incomplete if it's empty or just a space
+      if (select.value && select.value.trim() !== '') {
+        select.classList.add('complete');
+        select.classList.remove('incomplete');
+      } else {
+        select.classList.add('incomplete');
+        select.classList.remove('complete');
+      }
+    });
+  }
+
+  // Add event listeners to all selects to update color on change
+  document.querySelectorAll('.person-select, .supply-status-select').forEach(select => {
+    select.addEventListener('change', updateSelectColors);
+  });
+
+  // Initial color update on page load
+  updateSelectColors();
+
 
   // ==========================================
   // Late Tasks Handling
@@ -872,5 +896,160 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('Error:', error);
         alert('An error occurred while resetting supplies.'); 
       });
+  }
+
+  // Summary Modal Functionality
+  const summaryModal = document.getElementById('summaryModal');
+  const showSummaryButton = document.getElementById('showSummaryButton');
+  const summaryContent = document.getElementById('summaryContent');
+  const closeModalSpan = document.querySelector('.modal .close-button');
+
+  if (showSummaryButton) {
+    showSummaryButton.addEventListener('click', generateAndShowSummary);
+  }
+  if (closeModalSpan) {
+    closeModalSpan.addEventListener('click', () => {
+      summaryModal.style.display = 'none';
+    });
+  }
+  window.addEventListener('click', (event) => {
+    if (event.target == summaryModal) {
+      summaryModal.style.display = 'none';
+    }
+  });
+
+  // Helper function to prevent HTML injection issues
+  function escapeHTML(str) {
+      const p = document.createElement('p');
+      p.appendChild(document.createTextNode(str));
+      return p.innerHTML;
+  }
+
+  function generateAndShowSummary() {
+    summaryContent.innerHTML = '';
+    let hasIncompleteItems = false;
+    let finalHtml = '';
+
+    // --- Generate Tasks Summary 
+    let tasksHtml = '';
+    let incompleteTasksFound = false;
+
+    // Handle complex multi-column tasks (Kitchen, Toilet) by variant
+    document.querySelectorAll('.task-group-container').forEach(group => {
+        const variants = new Set();
+        // Get unique variant names from the data attributes (e.g., 'kitchen_thurs', 'kitchen_sun')
+        group.querySelectorAll('.person-select[data-task-variant-name]').forEach(sel => variants.add(sel.dataset.taskVariantName));
+
+        variants.forEach(variantName => {
+            const variantSelects = group.querySelectorAll(`.person-select[data-task-variant-name="${variantName}"]`);
+            const isVariantIncomplete = Array.from(variantSelects).some(s => s.value.trim() === '');
+
+            // If this specific variant (e.g., Thursday) has an incomplete subtask, create a table for it
+            if (isVariantIncomplete) {
+                incompleteTasksFound = true;
+                
+                // Find the correct header text (e.g., "Thursday" or "Sunday")
+                const taskTitle = group.querySelector('.task-title').textContent;
+                const headerCell = Array.from(group.querySelectorAll('thead th')).find(th => {
+                    const variantId = variantName.split('_')[1]; // e.g., 'thurs' or 'front'
+                    return th.textContent.toLowerCase().includes(variantId);
+                });
+                const variantHeaderText = headerCell ? headerCell.textContent.trim().split('\n')[0] : variantName;
+                const fullTitle = `${taskTitle} (${variantHeaderText})`;
+
+                let tableHtml = `<p><strong>${escapeHTML(fullTitle)}</strong></p><table class="summary-table"><thead><tr><th>Subtask</th><th>Signature</th></tr></thead><tbody>`;
+
+                // Find all subtask rows and check the select for this specific variant
+                group.querySelectorAll('tbody tr').forEach(row => {
+                    const subtaskNameCell = row.cells[0];
+                    const selectForVariant = row.querySelector(`.person-select[data-task-variant-name="${variantName}"]`);
+                    if (selectForVariant && subtaskNameCell) {
+                        const signatureValue = selectForVariant.value.trim();
+                        tableHtml += `<tr><td>${escapeHTML(subtaskNameCell.textContent)}</td>`;
+                        if (signatureValue === '') {
+                            tableHtml += `<td class="summary-text-incomplete">Incomplete</td></tr>`;
+                        } else {
+                            tableHtml += `<td class="summary-text-complete">${escapeHTML(selectForVariant.options[selectForVariant.selectedIndex].text)}</td></tr>`;
+                        }
+                    }
+                });
+                tableHtml += '</tbody></table>';
+                tasksHtml += tableHtml;
+            }
+        });
+    });
+
+    // Handle simple single-column tasks (Bathroom, Hallway, etc.)
+    document.querySelectorAll('.task-container').forEach(container => {
+        const selects = container.querySelectorAll('.person-select:not([disabled])');
+        const isTaskIncomplete = Array.from(selects).some(s => s.value.trim() === '');
+
+        if (isTaskIncomplete) {
+            incompleteTasksFound = true;
+            const taskTitle = container.querySelector('.task-title').textContent;
+            let tableHtml = `<p><strong>${escapeHTML(taskTitle)}</strong></p><table class="summary-table"><thead><tr><th>Subtask</th><th>Signature</th></tr></thead><tbody>`;
+            
+            container.querySelectorAll('tbody tr').forEach(row => {
+                const subtaskNameCell = row.cells[0];
+                const select = row.querySelector('.person-select');
+                if (select && subtaskNameCell) {
+                    const signatureValue = select.value.trim();
+                    tableHtml += `<tr><td>${escapeHTML(subtaskNameCell.textContent)}</td>`;
+                    if (signatureValue === '') {
+                        tableHtml += `<td class="summary-text-incomplete">Incomplete</td></tr>`;
+                    } else {
+                        tableHtml += `<td class="summary-text-complete">${escapeHTML(select.options[select.selectedIndex].text)}</td></tr>`;
+                    }
+                }
+            });
+            tableHtml += '</tbody></table>';
+            tasksHtml += tableHtml;
+        }
+    });
+
+    if (incompleteTasksFound) {
+      finalHtml += tasksHtml;
+      hasIncompleteItems = true;
+    }
+
+
+    // --- Generate Supplies Summary
+    const suppliesSelects = document.querySelectorAll('#suppliesForm .supply-status-select:not([disabled])');
+    const anySuppliesIncomplete = Array.from(suppliesSelects).some(s => s.value.trim() === '');
+
+    // If even one supply is incomplete, show the entire list with statuses
+    if (anySuppliesIncomplete) {
+        hasIncompleteItems = true;
+        let suppliesHtml = '<p><strong>Supplies:</strong></p><table class="summary-table"><thead><tr><th>Item</th><th>Status</th></tr></thead><tbody>';
+        
+        document.querySelectorAll('#suppliesForm tbody tr').forEach(row => {
+            const supplyName = row.cells[0].textContent;
+            const select = row.querySelector('.supply-status-select');
+            if (select) {
+                const statusValue = select.value.trim();
+                const statusText = select.options[select.selectedIndex].text;
+                
+                suppliesHtml += `<tr><td>${escapeHTML(supplyName)}</td>`;
+                if (statusValue === '') {
+                    suppliesHtml += `<td class="summary-text-incomplete">Incomplete</td></tr>`;
+                } else {
+                    suppliesHtml += `<td class="summary-text-complete">${escapeHTML(statusText)}</td></tr>`;
+                }
+            }
+        });
+
+        suppliesHtml += '</tbody></table>';
+        finalHtml += suppliesHtml;
+    }
+
+
+    // --- Final Message & Display Modal ---
+    if (!hasIncompleteItems) {
+      summaryContent.innerHTML = '<p style="font-size: 1.2em; text-align: center;">🎉 Everything is complete! Good job!</p>';
+    } else {
+      summaryContent.innerHTML = finalHtml;
+    }
+
+    summaryModal.style.display = 'block';
   }
 });
