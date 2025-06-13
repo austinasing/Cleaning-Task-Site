@@ -132,7 +132,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 ?>
                                 <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
                                         data-task-variant-name="kitchen_thurs" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                    <option value="">Incomplete</option>
+                                    <option value=""> </option>
                                     <?php foreach ($kitchenThursData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($member) ?>
@@ -150,7 +150,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 ?>
                                 <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
                                         data-task-variant-name="kitchen_sun" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                    <option value="">Incomplete</option>
+                                    <option value=""> </option>
                                     <?php foreach ($kitchenSunData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($member) ?>
@@ -222,7 +222,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 ?>
                                 <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
                                         data-task-variant-name="toilet_front" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                    <option value="">Incomplete</option>
+                                    <option value=""> </option>
                                     <?php foreach ($toiletFrontData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($member) ?>
@@ -240,7 +240,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 ?>
                                 <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
                                         data-task-variant-name="toilet_back" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                    <option value="">Incomplete</option>
+                                    <option value=""> </option>
                                     <?php foreach ($toiletBackData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($member) ?>
@@ -302,7 +302,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                     <td>
                                         <select name="signature[<?= $subtask['id'] ?>]" class="person-select" 
                                                 data-task-variant-name="<?= $task['taskname'] ?>" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                            <option value="">Incomplete</option>
+                                            <option value=""> </option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
                                                 <?= htmlspecialchars($member) ?>
@@ -346,7 +346,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                     <td>
                                         <select name="signature[<?= $subtask['id'] ?>]" class="person-select" 
                                                 data-task-variant-name="<?= $task['taskname'] ?>" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                            <option value="">Incomplete</option>
+                                            <option value=""> </option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
                                                 <?= htmlspecialchars($member) ?>
@@ -390,7 +390,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                     <td>
                                         <select name="signature[<?= $subtask['id'] ?>]" class="person-select" 
                                                 data-task-variant-name="<?= $task['taskname'] ?>" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                            <option value="">Incomplete</option>
+                                            <option value=""> </option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
                                                 <?= htmlspecialchars($member) ?>
