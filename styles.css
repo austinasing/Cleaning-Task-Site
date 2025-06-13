@@ -1,3 +1,39 @@
+body {
+    background-image: url('100px_tile.png');
+    background-repeat: repeat;
+    background-position: 0px 22px
+}
+
+h1 {
+    background-color: white;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.task-container {
+    background-color: white;
+}
+
+.task-header {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+
+
+.section {
+    background-color: white;
+    padding: 15px;
+    margin-bottom: 30px;
+    border-radius: 5px;
+}
+
+.section-title {
+    margin-block-start: 0;
+    margin-block-end: 20px;
+    text-align: center;
+}
+
 .message {
             display: none;
         }
@@ -7,13 +43,10 @@
     border: 1px solid #c3e6cb;
 }
 .status-bar {
-            background-color: #e9ecef;
-            padding: 10px 20px;
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center; /* Corrected from 'right' to 'center' for better alignment */
         }
 .status-bar .login-area form {
     display: flex;
@@ -31,10 +64,7 @@
     padding: 5px 10px;
     font-size: 0.9em;
 }
-.status-bar .user-info span {
-    margin-right: 15px;
-}
-.status-bar .user-info a, 
+.status-bar a, 
 .status-bar .login-area button {
     padding: 6px 12px;
     background-color: #007bff;
@@ -44,14 +74,14 @@
     border: none;
     cursor: pointer;
 }
-.status-bar .user-info a:hover, 
+.status-bar a:hover, 
 .status-bar .login-area button:hover {
     background-color: #0056b3;
 }
-    .status-bar .user-info a.logout {
+    .status-bar a.logout {
     background-color: #dc3545;
     }
-    .status-bar .user-info a.logout:hover {
+    .status-bar a.logout:hover {
     background-color: #c82333;
     }
 .login-error-top {
@@ -59,6 +89,14 @@
     font-size: 0.9em;
     margin-right: 15px;
 }
+
+span.remember-me-top  {
+    background-color: white;
+    border-radius: 5px;
+    padding: 3px;
+    padding-right: 5px;
+}
+
 .remember-me-top label {
     font-size: 0.9em;
     margin-left: 2px;
@@ -93,12 +131,89 @@ select:disabled {
     cursor: not-allowed;
 }
 
+.task-title {
+    display: inline;
+    text-decoration: underline;
+}
+.team-info {
+    display: inline;
+}
+
 .task-group-container { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;}
-.task-group-container .task-header { margin-bottom: 15px; }
 .multi-column-task-table { width: 100%; border-collapse: collapse; margin-bottom:10px; }
 .multi-column-task-table th, .multi-column-task-table td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top;}
 .multi-column-task-table th { background-color: #f0f0f0; }
 .multi-column-task-table .team-info-header { font-size: 0.9em; color: #555; font-weight: normal; display:block; margin-bottom:5px;}
 .multi-column-task-table .subtask-form button { margin-top: 5px; font-size: 0.9em; padding: 4px 8px;}
-.subtask-form { display: inline; }
+.subtask-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.subtask-form th, td {
+    padding: 0px 10px
+}
+.subtask-form button {
+    margin-top: 10px;
+}
+
+#supplies-section, #member-assignment-section form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.section form {
+    padding: 0px 10px
+}
+
+.section button {
+    margin-top: 10px;
+}
+
+.danger-button {
+    display: block;
+}
+
+
 .task-container { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+
+
+ /* 1. Force the table to obey the width we give it */
+#taskTable {
+    table-layout: fixed; /* This is the key: it stops content from dictating column width */
+    width: 100%;       /* Make the table fill its container */
+}
+
+/* 2. Make the select boxes fill their column, and account for borders/padding */
+#taskTable .member-select {
+    width: 100%;
+    box-sizing: border-box; /* Prevents padding/border from making it wider than 100% */
+}
+
+/* 3. Prevent long text in cells from overflowing and breaking the layout */
+#taskTable td {
+    overflow-wrap: break-word; /* Wraps long text to the next line */
+}
+
+/* --- Mobile --- */
+
+@media (max-width: 600px) {
+
+    /* Make the form a grid container */
+    .status-bar .login-area form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 5px 10px;
+        width: 100%; /* Ensure the form takes the full width of the login-area */
+    }
+    
+    /* Make the inputs themselves responsive */
+    .status-bar .login-area input[type="text"],
+    .status-bar .login-area input[type="password"] {
+        width: 100%; /* Force the input to fill its container (the grid column) */
+        box-sizing: border-box; /* THIS IS THE FIX: Include padding and border in the total width */
+    }
+
+
+}

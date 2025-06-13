@@ -1,5 +1,3 @@
-// script.js
-
 document.addEventListener('DOMContentLoaded', function () {
   // ==========================================
   // Team Assignment Form Handling

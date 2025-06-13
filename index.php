@@ -1,5 +1,4 @@
 <?php
-// index.php
 require_once 'auth_check.php'; // Includes config.php and starts session
 
 $login_error_message = '';
@@ -64,12 +63,10 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Login status -->
     <div class="status-bar">
         <?php if ($is_logged_in): ?>
-            <div class="user-info">
-                <span>Welcome, <?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?>!</span>
-                <a href="logout.php" class="logout">Logout</a>
-            </div>
+            <a href="logout.php" class="logout">Logout</a>
         <?php else: ?>
             <div class="login-area">
                 <?php if (!empty($login_error_message)): ?>
@@ -79,25 +76,24 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                     <input type="hidden" name="login_attempt" value="1">
                     <input type="text" id="username_top" name="username" placeholder="Username" required>
                     <input type="password" id="password_top" name="password" placeholder="Password" required>
+                    <button type="submit">Login</button>
                     <span class="remember-me-top">
                         <input type="checkbox" id="remember_me_top" name="remember_me">
-                        <label for="remember_me_top">Remember</label>
+                        <label for="remember_me_top">Remember me</label>
                     </span>
-                    <button type="submit">Login</button>
                 </form>
             </div>
         <?php endif; ?>
     </div>
-
+    
     <h1>7.2 Cleaning Tasks</h1>
 
-    <div class="section" id="subtask-assignment-section">
-        <h2>Sign off on your task!</h2>
-
+    <!-- Task Sign Off -->
+    <div class="task-section" id="subtask-assignment-section">
         <?php if (empty($allTasksRaw)): ?>
             <p>No task data found in the system.</p>
         <?php else: ?>
-
+            <!-- Kitchen Tasks -->
             <?php if ($kitchenThursData && $kitchenSunData): ?>
             <div class="task-group-container" id="task-group-kitchen">
                 <div class="task-header"><div class="task-title">Kitchen</div></div>
@@ -111,11 +107,11 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                             <th>Subtask</th>
                             <th>
                                 Thursday
-                                <?php if ($kitchenThursData['team_members']): ?><small class="team-info-header">Assigned: <?= implode(' & ', array_map('htmlspecialchars', $kitchenThursData['team_members'])) ?></small><?php else: ?><small class="team-info-header">No team</small><?php endif; ?>
+                                <?php if ($kitchenThursData['team_members']): ?><small class="team-info-header"><?= implode(' & ', array_map('htmlspecialchars', $kitchenThursData['team_members'])) ?></small><?php else: ?><small class="team-info-header">No team</small><?php endif; ?>
                             </th>
                             <th>
                                 Sunday
-                                <?php if ($kitchenSunData['team_members']): ?><small class="team-info-header">Assigned: <?= implode(' & ', array_map('htmlspecialchars', $kitchenSunData['team_members'])) ?></small><?php else: ?><small class="team-info-header">No team</small><?php endif; ?>
+                                <?php if ($kitchenSunData['team_members']): ?><small class="team-info-header"><?= implode(' & ', array_map('htmlspecialchars', $kitchenSunData['team_members'])) ?></small><?php else: ?><small class="team-info-header">No team</small><?php endif; ?>
                             </th>
                         </tr>
                     </thead>
@@ -136,7 +132,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 ?>
                                 <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
                                         data-task-variant-name="kitchen_thurs" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                    <option value="">-- Select --</option>
+                                    <option value="">Incomplete</option>
                                     <?php foreach ($kitchenThursData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($member) ?>
@@ -154,7 +150,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 ?>
                                 <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
                                         data-task-variant-name="kitchen_sun" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                    <option value="">-- Select --</option>
+                                    <option value="">Incomplete</option>
                                     <?php foreach ($kitchenSunData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($member) ?>
@@ -171,22 +167,23 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                             <td>&nbsp;</td> <td>
                                 <?php if ($is_logged_in && !empty($kitchenThursData['team_members']) && !empty($kitchenThursData['subtasks'])): ?>
                                 <form class="subtask-form" data-task-id="<?= $kitchenThursData['id'] ?>" data-task-variant-name="kitchen_thurs">
-                                    <button type="submit">Submit Thursday</button>
+                                    <button type="submit">Submit</button>
                                 </form>
-                                <?php elseif($is_logged_in): ?><button type="button" disabled title="Assign members/subtasks exist">Submit Thursday</button><?php endif; ?>
+                                <?php elseif($is_logged_in): ?><button type="button" disabled title="Assign members/subtasks exist">Submit</button><?php endif; ?>
                             </td>
                             <td>
                                 <?php if ($is_logged_in && !empty($kitchenSunData['team_members']) && !empty($kitchenSunData['subtasks'])): ?>
                                 <form class="subtask-form" data-task-id="<?= $kitchenSunData['id'] ?>" data-task-variant-name="kitchen_sun">
-                                    <button type="submit">Submit Sunday</button>
+                                    <button type="submit">Submit</button>
                                 </form>
-                                <?php elseif($is_logged_in): ?><button type="button" disabled title="Assign members/subtasks exist">Submit Sunday</button><?php endif; ?>
+                                <?php elseif($is_logged_in): ?><button type="button" disabled title="Assign members/subtasks exist">Submit</button><?php endif; ?>
                             </td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
             <?php else: echo "<p>Kitchen task data not fully available.</p>"; endif; ?>
+            <!-- Toilet Tasks -->
             <?php if ($toiletFrontData && $toiletBackData): ?>
             <div class="task-group-container" id="task-group-toilet">
                 <div class="task-header"><div class="task-title">Toilet</div></div>
@@ -200,11 +197,11 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                             <th>Subtask</th>
                             <th>
                                 Front
-                                <?php if ($toiletFrontData['team_members']): ?><small class="team-info-header">Assigned: <?= implode(' & ', array_map('htmlspecialchars', $toiletFrontData['team_members'])) ?></small><?php else: ?><small class="team-info-header">No team</small><?php endif; ?>
+                                <?php if ($toiletFrontData['team_members']): ?><small class="team-info-header"><?= implode(' & ', array_map('htmlspecialchars', $toiletFrontData['team_members'])) ?></small><?php else: ?><small class="team-info-header">No team</small><?php endif; ?>
                             </th>
                             <th>
                                 Back
-                                <?php if ($toiletBackData['team_members']): ?><small class="team-info-header">Assigned: <?= implode(' & ', array_map('htmlspecialchars', $toiletBackData['team_members'])) ?></small><?php else: ?><small class="team-info-header">No team</small><?php endif; ?>
+                                <?php if ($toiletBackData['team_members']): ?><small class="team-info-header"><?= implode(' & ', array_map('htmlspecialchars', $toiletBackData['team_members'])) ?></small><?php else: ?><small class="team-info-header">No team</small><?php endif; ?>
                             </th>
                         </tr>
                     </thead>
@@ -225,7 +222,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 ?>
                                 <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
                                         data-task-variant-name="toilet_front" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                    <option value="">-- Select --</option>
+                                    <option value="">Incomplete</option>
                                     <?php foreach ($toiletFrontData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($member) ?>
@@ -243,7 +240,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 ?>
                                 <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
                                         data-task-variant-name="toilet_back" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                    <option value="">-- Select --</option>
+                                    <option value="">Incomplete</option>
                                     <?php foreach ($toiletBackData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($member) ?>
@@ -260,28 +257,29 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                            <td>&nbsp;</td> <td>
                                 <?php if ($is_logged_in && !empty($toiletFrontData['team_members']) && !empty($toiletFrontData['subtasks'])): ?>
                                 <form class="subtask-form" data-task-id="<?= $toiletFrontData['id'] ?>" data-task-variant-name="toilet_front">
-                                    <button type="submit">Submit Front</button>
+                                    <button type="submit">Submit</button>
                                 </form>
-                                <?php elseif($is_logged_in): ?><button type="button" disabled title="Assign members/subtasks exist">Submit Front</button><?php endif; ?>
+                                <?php elseif($is_logged_in): ?><button type="button" disabled title="Assign members/subtasks exist">Submit</button><?php endif; ?>
                            </td>
                            <td>
                                 <?php if ($is_logged_in && !empty($toiletBackData['team_members']) && !empty($toiletBackData['subtasks'])): ?>
                                 <form class="subtask-form" data-task-id="<?= $toiletBackData['id'] ?>" data-task-variant-name="toilet_back">
-                                    <button type="submit">Submit Back</button>
+                                    <button type="submit">Submit</button>
                                 </form>
-                                <?php elseif($is_logged_in): ?><button type="button" disabled title="Assign members/subtasks exist">Submit Back</button><?php endif; ?>
+                                <?php elseif($is_logged_in): ?><button type="button" disabled title="Assign members/subtasks exist">Submit</button><?php endif; ?>
                            </td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
             <?php else: echo "<p>Toilet task data not fully available.</p>"; endif; ?>
+            <!-- Bathroom Tasks -->
             <?php if ($bathroomData): $task = $bathroomData; ?>
             <div class="task-container" id="task-<?= $task['id'] ?>">
                 <div class="task-header">
-                    <div class="task-title"><?= htmlspecialchars($task['taskname']) ?></div>
+                    <div class="task-title"><?= htmlspecialchars($task['taskname']) ?>:</div>
                     <?php if (!empty($task['team_members'])): ?>
-                        <div class="team-info">Assigned: <?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
+                        <div class="team-info"><?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
                     <?php else: ?>
                         <div class="team-info">No members assigned yet</div>
                     <?php endif; ?>
@@ -304,7 +302,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                     <td>
                                         <select name="signature[<?= $subtask['id'] ?>]" class="person-select" 
                                                 data-task-variant-name="<?= $task['taskname'] ?>" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                            <option value="">-- Select --</option>
+                                            <option value="">Incomplete</option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
                                                 <?= htmlspecialchars($member) ?>
@@ -322,12 +320,13 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                 <?php endif; ?>
             </div>
             <?php else: echo "<p>Bathroom task data not available.</p>"; endif; ?>
+            <!-- Hallway Tasks -->
             <?php if ($hallwayData): $task = $hallwayData; ?>
             <div class="task-container" id="task-<?= $task['id'] ?>">
                  <div class="task-header">
-                    <div class="task-title"><?= htmlspecialchars($task['taskname']) ?></div>
+                    <div class="task-title"><?= htmlspecialchars($task['taskname']) ?>:</div>
                     <?php if (!empty($task['team_members'])): ?>
-                        <div class="team-info">Assigned: <?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
+                        <div class="team-info"><?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
                     <?php else: ?>
                         <div class="team-info">No members assigned yet</div>
                     <?php endif; ?>
@@ -347,7 +346,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                     <td>
                                         <select name="signature[<?= $subtask['id'] ?>]" class="person-select" 
                                                 data-task-variant-name="<?= $task['taskname'] ?>" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                            <option value="">-- Select --</option>
+                                            <option value="">Incomplete</option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
                                                 <?= htmlspecialchars($member) ?>
@@ -365,12 +364,13 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                 <?php endif; ?>
             </div>
             <?php else: echo "<p>Hallway task data not available.</p>"; endif; ?>
+            <!-- Garbage Tasks -->
             <?php if ($garbageData): $task = $garbageData; ?>
             <div class="task-container" id="task-<?= $task['id'] ?>">
                 <div class="task-header">
-                    <div class="task-title"><?= htmlspecialchars($task['taskname']) ?></div>
+                    <div class="task-title"><?= htmlspecialchars($task['taskname']) ?>:</div>
                     <?php if (!empty($task['team_members'])): ?>
-                        <div class="team-info">Assigned: <?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
+                        <div class="team-info"><?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
                     <?php else: ?>
                         <div class="team-info">No members assigned yet</div>
                     <?php endif; ?>
@@ -390,7 +390,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                     <td>
                                         <select name="signature[<?= $subtask['id'] ?>]" class="person-select" 
                                                 data-task-variant-name="<?= $task['taskname'] ?>" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                            <option value="">-- Select --</option>
+                                            <option value="">Incomplete</option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
                                                 <?= htmlspecialchars($member) ?>
@@ -410,9 +410,9 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <?php else: echo "<p>Garbage task data not available.</p>"; endif; ?>
             <?php endif; // End main check for $allTasksRaw ?>
     </div>
-
+    <!-- Assignment Member -->
     <div class="section" id="member-assignment-section">
-        <h2>Assign Members to Tasks</h2>
+        <h2 class='section-title'>Assign Members to Tasks</h2>
         <div id="taskAssignmentSuccessMessage" class="message success" style="display:none;"></div>
         <div id="taskAssignmentErrorMessage" class="message error" style="display:none;"></div>
         <?php if (!empty($tasksForAssignmentTable)): ?>
@@ -453,57 +453,57 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
             <?php if ($is_logged_in): ?>
                 <button type="submit" id="saveTaskAssignmentButton">Save Member Assignments</button>
             <?php else: ?>
                 <button type="submit" id="saveTaskAssignmentButton" disabled title="Please log in to submit changes">Save Member Assignments</button>
             <?php endif; ?>
-        </form>
-        <?php else: echo "<p>Task list for assignments not available.</p>"; endif; ?>
-    
-    <?php
-    if (!empty($allRoommates) && !empty($tasksForAssignmentTable)) {
-        // Create an array of all roommate IDs
-        $allRoommateIds = array_map(function($r) { return $r['id']; }, $allRoommates);
 
-        // Create an array of assigned roommate IDs
-        $assignedRoommateIds = [];
-        foreach ($tasksForAssignmentTable as $task) {
-            if ($task['member1_id']) $assignedRoommateIds[] = $task['member1_id'];
-            if ($task['member2_id']) $assignedRoommateIds[] = $task['member2_id'];
-        }
-        $assignedRoommateIds = array_unique($assignedRoommateIds);
+            <!-- Reserve section -->
+            <?php
+            if (!empty($allRoommates) && !empty($tasksForAssignmentTable)) {
+                // Create an array of all roommate IDs
+                $allRoommateIds = array_map(function($r) { return $r['id']; }, $allRoommates);
 
-        // Find the IDs of roommates who are not assigned and not Zarrin (ID 17)
-        $reserveRoommateIds = array_diff($allRoommateIds, $assignedRoommateIds);
-        $zarrinId = 17;
-        if (($key = array_search($zarrinId, $reserveRoommateIds)) !== false) {
-            unset($reserveRoommateIds[$key]);
-        }
+                // Create an array of assigned roommate IDs
+                $assignedRoommateIds = [];
+                foreach ($tasksForAssignmentTable as $task) {
+                    if ($task['member1_id']) $assignedRoommateIds[] = $task['member1_id'];
+                    if ($task['member2_id']) $assignedRoommateIds[] = $task['member2_id'];
+                }
+                $assignedRoommateIds = array_unique($assignedRoommateIds);
 
-        // Get the names of the reserve roommates
-        $reserveRoommates = [];
-        foreach ($reserveRoommateIds as $id) {
-            foreach ($allRoommates as $roommate) {
-                if ($roommate['id'] == $id) {
-                    $reserveRoommates[] = $roommate['name'];
-                    break;
+                // Find the IDs of roommates who are not assigned and not Zarrin (ID 17)
+                $reserveRoommateIds = array_diff($allRoommateIds, $assignedRoommateIds);
+                $zarrinId = 17;
+                if (($key = array_search($zarrinId, $reserveRoommateIds)) !== false) {
+                    unset($reserveRoommateIds[$key]);
+                }
+
+                // Get the names of the reserve roommates
+                $reserveRoommates = [];
+                foreach ($reserveRoommateIds as $id) {
+                    foreach ($allRoommates as $roommate) {
+                        if ($roommate['id'] == $id) {
+                            $reserveRoommates[] = $roommate['name'];
+                            break;
+                        }
+                    }
+                }
+
+                // Display the reserve roommates
+                if (!empty($reserveRoommates)) {
+                    echo '<p> Reserve: ' . htmlspecialchars(implode(', ', $reserveRoommates)) . '</p>';
                 }
             }
-        }
-
-        // Display the reserve roommates
-        if (!empty($reserveRoommates)) {
-            echo '<h3>Reserve</h3>';
-            echo '<p>' . htmlspecialchars(implode(', ', $reserveRoommates)) . '</p>';
-        }
-    }
-    ?>
-
+            ?>
+        </form>
+        <?php else: echo "<p>Task list for assignments not available.</p>"; endif; ?>
     </div>
     
     <div class="section" id="supplies-section">
-        <h2>Supplies</h2>
+        <h2 class='section-title'>Supplies</h2>
         <div id="suppliesSuccessMessage" class="message success" style="display:none;"></div>
          <?php if (empty($supplies)): ?>
             <p>No supplies found in the database.</p>
@@ -541,7 +541,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
     </div>
 
     <div class="section" id="wishlist-section">
-        <h2>Wishlist</h2>
+        <h2 class='section-title'>Wishlist</h2>
         <div id="wishlistSuccessMessage" class="message success" style="display:none;"></div>
         <div id="wishlistErrorMessage" class="message error" style="display:none;"></div>
         <?php if ($is_logged_in): ?>
@@ -570,7 +570,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
     </div>
 
     <div class="section" id="latetasks-section">
-        <h2>Late Tasks</h2>
+        <h2 class='section-title'>Late Tasks</h2>
         <div id="lateTaskSuccessMessage" class="message success" style="display:none;"></div>
         <div id="lateTaskErrorMessage" class="message error" style="display:none;"></div>
         <?php if ($is_logged_in): ?>
@@ -617,15 +617,11 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
     </div>
 
     <div class="section" id="reset-section">
-        <h2>Reset all sign-offs</h2>
+        <h2 class='section-title'>Reset For The New Week</h2>
         <div id="resetSignaturesSuccessMessage" class="message success" style="display:none;">All signatures reset!</div>
-        <button id="resetAllSignaturesButton" class="danger-button" <?php if (!$is_logged_in) echo 'disabled title="Log in to use reset functions"'; ?>>Reset sign-offs</button>
-                                
-        <h2>Reset supplies</h2>
+        <button id="resetAllSignaturesButton" class="danger-button" <?php if (!$is_logged_in) echo 'disabled title="Log in to use reset functions"'; ?>>Reset Task Signatures</button>
         <div id="resetSuppliesSuccessMessage" class="message success" style="display:none;">Supplies reset!</div>
         <button id="resetSuppliesButton" class="danger-button" <?php if (!$is_logged_in) echo 'disabled title="Log in to use reset functions"'; ?>>Reset supplies</button>
-    
-        <h2>Reset Late Tasks</h2>
         <div id="resetLateTasksSuccessMessage" class="message success" style="display:none;">Late tasks reset!</div>
         <div id="resetLateTasksErrorMessage" class="message error" style="display:none;"></div>
         <button id="resetAllLateTasksButton" class="danger-button" <?php if (!$is_logged_in) echo 'disabled title="Log in to use reset functions"'; ?>>Reset All Late Tasks</button>
