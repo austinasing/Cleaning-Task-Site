@@ -460,6 +460,46 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <?php endif; ?>
         </form>
         <?php else: echo "<p>Task list for assignments not available.</p>"; endif; ?>
+    
+    <?php
+    if (!empty($allRoommates) && !empty($tasksForAssignmentTable)) {
+        // Create an array of all roommate IDs
+        $allRoommateIds = array_map(function($r) { return $r['id']; }, $allRoommates);
+
+        // Create an array of assigned roommate IDs
+        $assignedRoommateIds = [];
+        foreach ($tasksForAssignmentTable as $task) {
+            if ($task['member1_id']) $assignedRoommateIds[] = $task['member1_id'];
+            if ($task['member2_id']) $assignedRoommateIds[] = $task['member2_id'];
+        }
+        $assignedRoommateIds = array_unique($assignedRoommateIds);
+
+        // Find the IDs of roommates who are not assigned and not Zarrin (ID 17)
+        $reserveRoommateIds = array_diff($allRoommateIds, $assignedRoommateIds);
+        $zarrinId = 17;
+        if (($key = array_search($zarrinId, $reserveRoommateIds)) !== false) {
+            unset($reserveRoommateIds[$key]);
+        }
+
+        // Get the names of the reserve roommates
+        $reserveRoommates = [];
+        foreach ($reserveRoommateIds as $id) {
+            foreach ($allRoommates as $roommate) {
+                if ($roommate['id'] == $id) {
+                    $reserveRoommates[] = $roommate['name'];
+                    break;
+                }
+            }
+        }
+
+        // Display the reserve roommates
+        if (!empty($reserveRoommates)) {
+            echo '<h3>Reserve</h3>';
+            echo '<p>' . htmlspecialchars(implode(', ', $reserveRoommates)) . '</p>';
+        }
+    }
+    ?>
+
     </div>
     
     <div class="section" id="supplies-section">
