@@ -86,7 +86,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
         <?php endif; ?>
     </div>
     
-    <h1>7.2 Cleaning Tasks</h1>
+    <img class='mural'src='seventwo_trans_bg.png' alt='seven point two mural'>
 
     <!-- Task Sign Off -->
     <div class="task-section" id="subtask-assignment-section">
@@ -96,7 +96,10 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <!-- Kitchen Tasks -->
             <?php if ($kitchenThursData && $kitchenSunData): ?>
             <div class="task-group-container" id="task-group-kitchen">
-                <div class="task-header"><div class="task-title">Kitchen</div></div>
+                <div class="task-header">
+                    <div class="task-title">Kitchen</div>
+                    <img class = 'task-gif' src='kitchen.gif'>
+                </div>
                 
                 <div class="subtask-success-message-<?= $kitchenThursData['id'] ?> message success" style="display:none;">Kitchen (Thursday) assignments saved!</div>
                 <div class="subtask-success-message-<?= $kitchenSunData['id'] ?> message success" style="display:none;">Kitchen (Sunday) assignments saved!</div>
@@ -186,7 +189,10 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <!-- Toilet Tasks -->
             <?php if ($toiletFrontData && $toiletBackData): ?>
             <div class="task-group-container" id="task-group-toilet">
-                <div class="task-header"><div class="task-title">Toilet</div></div>
+                <div class="task-header">
+                    <div class="task-title">Toilet</div>
+                    <img class = 'task-gif' src='toilet.gif'>
+                </div>
                 
                 <div class="subtask-success-message-<?= $toiletFrontData['id'] ?> message success" style="display:none;">Toilet (Front) assignments saved!</div>
                 <div class="subtask-success-message-<?= $toiletBackData['id'] ?> message success" style="display:none;">Toilet (Back) assignments saved!</div>
@@ -277,12 +283,15 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <?php if ($bathroomData): $task = $bathroomData; ?>
             <div class="task-container" id="task-<?= $task['id'] ?>">
                 <div class="task-header">
-                    <div class="task-title"><?= htmlspecialchars($task['taskname']) ?>:</div>
-                    <?php if (!empty($task['team_members'])): ?>
-                        <div class="team-info"><?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
-                    <?php else: ?>
-                        <div class="team-info">No members assigned yet</div>
-                    <?php endif; ?>
+                    <div class="task-info-left">
+                        <div class="task-title"><?= htmlspecialchars($task['taskname']) ?>:</div>
+                        <?php if (!empty($task['team_members'])): ?>
+                            <div class="team-info"><?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
+                        <?php else: ?>
+                            <div class="team-info">No members assigned yet</div>
+                        <?php endif; ?>
+                    </div>
+                    <img class='task-gif' src='shower2.gif'>
                 </div>
                 <div class="subtask-success-message-<?= $task['id'] ?> message success" style="display:none;">Assignments saved!</div>
                 <?php if (empty($task['subtasks'])): ?>
@@ -324,12 +333,15 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <?php if ($hallwayData): $task = $hallwayData; ?>
             <div class="task-container" id="task-<?= $task['id'] ?>">
                  <div class="task-header">
-                    <div class="task-title"><?= htmlspecialchars($task['taskname']) ?>:</div>
-                    <?php if (!empty($task['team_members'])): ?>
-                        <div class="team-info"><?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
-                    <?php else: ?>
-                        <div class="team-info">No members assigned yet</div>
-                    <?php endif; ?>
+                    <div class="task-info-left">
+                        <div class="task-title"><?= htmlspecialchars($task['taskname']) ?>:</div>
+                        <?php if (!empty($task['team_members'])): ?>
+                            <div class="team-info"><?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
+                        <?php else: ?>
+                            <div class="team-info">No members assigned yet</div>
+                        <?php endif; ?>
+                    </div>
+                    <img class='task-gif' src='hallway.gif'>
                 </div>
                 <div class="subtask-success-message-<?= $task['id'] ?> message success" style="display:none;">Assignments saved!</div>
                 <?php if (empty($task['subtasks'])): ?> <p>No subtasks found for this task.</p>
@@ -368,12 +380,15 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <?php if ($garbageData): $task = $garbageData; ?>
             <div class="task-container" id="task-<?= $task['id'] ?>">
                 <div class="task-header">
-                    <div class="task-title"><?= htmlspecialchars($task['taskname']) ?>:</div>
-                    <?php if (!empty($task['team_members'])): ?>
-                        <div class="team-info"><?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
-                    <?php else: ?>
-                        <div class="team-info">No members assigned yet</div>
-                    <?php endif; ?>
+                    <div class="task-info-left">
+                        <div class="task-title"><?= htmlspecialchars($task['taskname']) ?>:</div>
+                        <?php if (!empty($task['team_members'])): ?>
+                            <div class="team-info"><?= implode(' & ', array_map('htmlspecialchars', $task['team_members'])) ?></div>
+                        <?php else: ?>
+                            <div class="team-info">No members assigned yet</div>
+                        <?php endif; ?>
+                    </div>
+                    <img class='task-gif' src='trash.gif'>
                 </div>
                 <div class="subtask-success-message-<?= $task['id'] ?> message success" style="display:none;">Assignments saved!</div>
                  <?php if (empty($task['subtasks'])): ?> <p>No subtasks found for this task.</p>
@@ -501,7 +516,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
         </form>
         <?php else: echo "<p>Task list for assignments not available.</p>"; endif; ?>
     </div>
-    
+    <!-- Supplies -->
     <div class="section" id="supplies-section">
         <h2 class='section-title'>Supplies</h2>
         <div id="suppliesSuccessMessage" class="message success" style="display:none;"></div>
@@ -539,7 +554,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             </form>
         <?php endif; ?>
     </div>
-
+    <!-- Wishlist -->
     <div class="section" id="wishlist-section">
         <h2 class='section-title'>Wishlist</h2>
         <div id="wishlistSuccessMessage" class="message success" style="display:none;"></div>
@@ -568,7 +583,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <?php endif; ?>
         </ul>
     </div>
-
+    <!-- Latetasks -->
     <div class="section" id="latetasks-section">
         <h2 class='section-title'>Late Tasks</h2>
         <div id="lateTaskSuccessMessage" class="message success" style="display:none;"></div>
@@ -615,27 +630,27 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <?php endif; ?>
         </ul>
     </div>
-
+    <!-- Incomplete Tasks -->
+    <div class="section" id="summary-section">
+        <h2 class='section-title'>Incomplete Tasks</h2>
+        <button id="showSummaryButton" class="summary-btn">Show Summary</button>
+    </div>
+    <!-- Reset -->
     <div class="section" id="reset-section">
         <h2 class='section-title'>Reset For The New Week</h2>
         <div id="resetSignaturesSuccessMessage" class="message success" style="display:none;">All signatures reset!</div>
         <button id="resetAllSignaturesButton" class="danger-button" <?php if (!$is_logged_in) echo 'disabled title="Log in to use reset functions"'; ?>>Reset Task Signatures</button>
         <div id="resetSuppliesSuccessMessage" class="message success" style="display:none;">Supplies reset!</div>
-        <button id="resetSuppliesButton" class="danger-button" <?php if (!$is_logged_in) echo 'disabled title="Log in to use reset functions"'; ?>>Reset supplies</button>
+        <button id="resetSuppliesButton" class="danger-button" <?php if (!$is_logged_in) echo 'disabled title="Log in to use reset functions"'; ?>>Reset Supplies</button>
         <div id="resetLateTasksSuccessMessage" class="message success" style="display:none;">Late tasks reset!</div>
         <div id="resetLateTasksErrorMessage" class="message error" style="display:none;"></div>
         <button id="resetAllLateTasksButton" class="danger-button" <?php if (!$is_logged_in) echo 'disabled title="Log in to use reset functions"'; ?>>Reset All Late Tasks</button>
     </div>
 
-    <div class="section" id="summary-section">
-        <h2 class='section-title'>End of Week Summary</h2>
-        <button id="showSummaryButton" class="summary-btn">Show Summary</button>
-    </div>
-
     <div id="summaryModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2 id="summary-title">Weekly Summary</h2>
+            <h2 id="summary-title">Incomplete Tasks</h2>
             <div id="summaryContent">
                 </div>
         </div>

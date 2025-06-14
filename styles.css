@@ -4,19 +4,56 @@ body {
     background-position: 0px 22px
 }
 
+.mural {
+    display: block;
+    width: 75%;
+    margin: 10px auto;
+
+}
+
 h1 {
     background-color: white;
     text-align: center;
     border-radius: 10px;
+    margin-block-start: 0px;
 }
 
 .task-container {
     background-color: white;
 }
 
-.task-header {
+.task-group-container .task-header {
     text-align: center;
     margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+}
+
+.task-group-container .task-title {
+    padding-block-start: 15px;
+    text-decoration: underline;
+}
+
+.task-container .task-header {
+    display:flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.task-info-left {
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.task-container .task-title {
+    display: inline;
+    text-decoration: underline;
+}
+
+.task-gif {
+    height:50px
 }
 
 
@@ -42,7 +79,7 @@ h1 {
     border: 1px solid #c3e6cb;
 }
 .status-bar {
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: flex-end;
     align-items: center; /* Corrected from 'right' to 'center' for better alignment */
@@ -142,10 +179,8 @@ select.incomplete {
     border: 1px solid #f5c6cb;
 }
 
-.task-title {
-    display: inline;
-    text-decoration: underline;
-}
+
+
 .team-info {
     display: inline;
 }
@@ -277,14 +312,15 @@ select.incomplete {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em; /* Smaller font for table content */
+    table-layout: fixed; /* Add this line for equal column widths */
 }
+
+/* Also add word-wrap to the td, th rule to prevent long text from breaking the layout */
 .summary-table th, .summary-table td {
     border: 1px solid #ddd;
     padding: 2px; /* Minimal padding */
     text-align: left;
-}
-.summary-table th {
-    background-color: #f2f2f2;
+    word-wrap: break-word; /* Add this line */
 }
 
 .summary-text-complete {

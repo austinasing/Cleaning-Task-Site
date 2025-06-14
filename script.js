@@ -930,53 +930,68 @@ document.addEventListener('DOMContentLoaded', function () {
     let hasIncompleteItems = false;
     let finalHtml = '';
 
-    // --- Generate Tasks Summary 
+    // --- Generate Tasks Summary (Final Version with Names in Header) ---
     let tasksHtml = '';
     let incompleteTasksFound = false;
 
-    // Handle complex multi-column tasks (Kitchen, Toilet) by variant
+    // Handle complex multi-column tasks (Kitchen, Toilet)
     document.querySelectorAll('.task-group-container').forEach(group => {
-        const variants = new Set();
-        // Get unique variant names from the data attributes (e.g., 'kitchen_thurs', 'kitchen_sun')
-        group.querySelectorAll('.person-select[data-task-variant-name]').forEach(sel => variants.add(sel.dataset.taskVariantName));
+        const selects = group.querySelectorAll('.person-select:not([disabled])');
+        const isGroupIncomplete = Array.from(selects).some(s => s.value.trim() === '');
 
-        variants.forEach(variantName => {
-            const variantSelects = group.querySelectorAll(`.person-select[data-task-variant-name="${variantName}"]`);
-            const isVariantIncomplete = Array.from(variantSelects).some(s => s.value.trim() === '');
+        if (isGroupIncomplete) {
+            incompleteTasksFound = true;
+            
+            const taskTitle = group.querySelector('.task-title').textContent;
+            // The title no longer needs the team info below it
+            let tableHtml = `<p><strong>${escapeHTML(taskTitle)}</strong></p><table class="summary-table">`;
+            
+            // Recreate the table header, inserting roommate names
+            tableHtml += '<thead><tr>';
+            group.querySelectorAll('thead th').forEach(th => {
+                // Get the main header text like "Thursday" or "Subtask"
+                const headerTextNode = th.cloneNode(true);
+                headerTextNode.querySelectorAll('small').forEach(sm => sm.remove()); // Remove existing small tags
+                let finalHeaderText = headerTextNode.textContent.trim();
 
-            // If this specific variant (e.g., Thursday) has an incomplete subtask, create a table for it
-            if (isVariantIncomplete) {
-                incompleteTasksFound = true;
-                
-                // Find the correct header text (e.g., "Thursday" or "Sunday")
-                const taskTitle = group.querySelector('.task-title').textContent;
-                const headerCell = Array.from(group.querySelectorAll('thead th')).find(th => {
-                    const variantId = variantName.split('_')[1]; // e.g., 'thurs' or 'front'
-                    return th.textContent.toLowerCase().includes(variantId);
-                });
-                const variantHeaderText = headerCell ? headerCell.textContent.trim().split('\n')[0] : variantName;
-                const fullTitle = `${taskTitle} (${variantHeaderText})`;
-
-                let tableHtml = `<p><strong>${escapeHTML(fullTitle)}</strong></p><table class="summary-table"><thead><tr><th>Subtask</th><th>Signature</th></tr></thead><tbody>`;
-
-                // Find all subtask rows and check the select for this specific variant
-                group.querySelectorAll('tbody tr').forEach(row => {
-                    const subtaskNameCell = row.cells[0];
-                    const selectForVariant = row.querySelector(`.person-select[data-task-variant-name="${variantName}"]`);
-                    if (selectForVariant && subtaskNameCell) {
-                        const signatureValue = selectForVariant.value.trim();
-                        tableHtml += `<tr><td>${escapeHTML(subtaskNameCell.textContent)}</td>`;
-                        if (signatureValue === '') {
-                            tableHtml += `<td class="summary-text-incomplete">Incomplete</td></tr>`;
-                        } else {
-                            tableHtml += `<td class="summary-text-complete">${escapeHTML(selectForVariant.options[selectForVariant.selectedIndex].text)}</td></tr>`;
-                        }
+                // Find the team info within this specific header cell
+                const teamInfoEl = th.querySelector('.team-info-header');
+                if (teamInfoEl) {
+                    const teamText = teamInfoEl.textContent.replace('Assigned:', '').trim();
+                    if (teamText.toLowerCase() !== 'no team') {
+                        // Append names in parentheses, e.g., "Thursday (Aisha & Helene)"
+                        finalHeaderText += ` (${escapeHTML(teamText)})`;
                     }
-                });
-                tableHtml += '</tbody></table>';
-                tasksHtml += tableHtml;
-            }
-        });
+                }
+                tableHtml += `<th>${finalHeaderText}</th>`;
+            });
+            tableHtml += '</tr></thead>';
+
+            // Recreate the table body (this logic remains the same)
+            tableHtml += '<tbody>';
+            group.querySelectorAll('tbody tr').forEach(row => {
+                tableHtml += '<tr>';
+                const subtaskNameCell = row.cells[0];
+                tableHtml += `<td>${escapeHTML(subtaskNameCell.textContent)}</td>`;
+                for (let i = 1; i < row.cells.length; i++) {
+                    const cell = row.cells[i];
+                    const select = cell.querySelector('.person-select');
+                    if (select) {
+                        const signatureValue = select.value.trim();
+                        if (signatureValue === '') {
+                            tableHtml += `<td class="summary-text-incomplete">Incomplete</td>`;
+                        } else {
+                            tableHtml += `<td class="summary-text-complete">${escapeHTML(select.options[select.selectedIndex].text)}</td>`;
+                        }
+                    } else {
+                        tableHtml += `<td>${cell.innerHTML}</td>`;
+                    }
+                }
+                tableHtml += '</tr>';
+            });
+            tableHtml += '</tbody></table>';
+            tasksHtml += tableHtml;
+        }
     });
 
     // Handle simple single-column tasks (Bathroom, Hallway, etc.)
@@ -987,7 +1002,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isTaskIncomplete) {
             incompleteTasksFound = true;
             const taskTitle = container.querySelector('.task-title').textContent;
-            let tableHtml = `<p><strong>${escapeHTML(taskTitle)}</strong></p><table class="summary-table"><thead><tr><th>Subtask</th><th>Signature</th></tr></thead><tbody>`;
+            
+            // Extract roommate names to build the header
+            let signOffHeaderText = 'Sign-off';
+            const teamInfoEl = container.querySelector('.team-info');
+            if (teamInfoEl) {
+                const teamText = teamInfoEl.textContent.replace('Assigned:', '').trim();
+                if (!teamText.toLowerCase().includes('no members')) {
+                     signOffHeaderText += ` (${escapeHTML(teamText)})`;
+                }
+            }
+            
+            let tableHtml = `<p><strong>${escapeHTML(taskTitle)}</strong></p><table class="summary-table"><thead><tr><th>Subtask</th><th>${signOffHeaderText}</th></tr></thead><tbody>`;
             
             container.querySelectorAll('tbody tr').forEach(row => {
                 const subtaskNameCell = row.cells[0];
@@ -998,7 +1024,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (signatureValue === '') {
                         tableHtml += `<td class="summary-text-incomplete">Incomplete</td></tr>`;
                     } else {
-                        tableHtml += `<td class="summary-text-complete">${escapeHTML(select.options[select.selectedIndex].text)}</td></tr>`;
+                        tableHtml += `<td class="summary-text-complete">${escapeHTML(select.options[select.selectedIndex].text)}</td>`;
                     }
                 }
             });
@@ -1012,23 +1038,17 @@ document.addEventListener('DOMContentLoaded', function () {
       hasIncompleteItems = true;
     }
 
-
-    // --- Generate Supplies Summary
-    const suppliesSelects = document.querySelectorAll('#suppliesForm .supply-status-select:not([disabled])');
-    const anySuppliesIncomplete = Array.from(suppliesSelects).some(s => s.value.trim() === '');
-
-    // If even one supply is incomplete, show the entire list with statuses
+    // Logic for supplies remains the same
+    const anySuppliesIncomplete = Array.from(document.querySelectorAll('#suppliesForm .supply-status-select:not([disabled])')).some(s => s.value.trim() === '');
     if (anySuppliesIncomplete) {
         hasIncompleteItems = true;
-        let suppliesHtml = '<p><strong>Supplies:</strong></p><table class="summary-table"><thead><tr><th>Item</th><th>Status</th></tr></thead><tbody>';
-        
+        let suppliesHtml = '<p><strong>Supplies</strong></p><table class="summary-table"><thead><tr><th>Item</th><th>Status</th></tr></thead><tbody>';
         document.querySelectorAll('#suppliesForm tbody tr').forEach(row => {
             const supplyName = row.cells[0].textContent;
             const select = row.querySelector('.supply-status-select');
             if (select) {
                 const statusValue = select.value.trim();
                 const statusText = select.options[select.selectedIndex].text;
-                
                 suppliesHtml += `<tr><td>${escapeHTML(supplyName)}</td>`;
                 if (statusValue === '') {
                     suppliesHtml += `<td class="summary-text-incomplete">Incomplete</td></tr>`;
@@ -1037,15 +1057,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         });
-
         suppliesHtml += '</tbody></table>';
         finalHtml += suppliesHtml;
     }
 
-
     // --- Final Message & Display Modal ---
     if (!hasIncompleteItems) {
-      summaryContent.innerHTML = '<p style="font-size: 1.2em; text-align: center;">🎉 Everything is complete! Good job!</p>';
+      summaryContent.innerHTML = '<p style="font-size: 1.2em; text-align: center;">🎉 Everything is complete! Great job, team!</p>';
     } else {
       summaryContent.innerHTML = finalHtml;
     }
