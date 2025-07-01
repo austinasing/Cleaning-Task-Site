@@ -446,7 +446,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                         <td><?= htmlspecialchars($task_assignment_item['taskname']) ?></td>
                         <td>
                             <select class="member-select" name="tasks[<?= $task_assignment_item['id'] ?>][member1]" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                <option value="">-- Select Member 1 --</option>
+                                <option value="">-- --</option>
                                 <?php foreach($allRoommates as $roommate): ?>
                                     <option value="<?= $roommate['id'] ?>" <?= ($roommate['id'] == $task_assignment_item['member1_id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($roommate['name']) ?>
@@ -456,7 +456,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                         </td>
                         <td>
                             <select class="member-select" name="tasks[<?= $task_assignment_item['id'] ?>][member2]" <?php if (!$is_logged_in) echo 'disabled'; ?>>
-                                <option value="">-- Select Member 2 --</option>
+                                <option value="">-- --</option>
                                 <?php foreach($allRoommates as $roommate): ?>
                                     <option value="<?= $roommate['id'] ?>" <?= ($roommate['id'] == $task_assignment_item['member2_id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($roommate['name']) ?>
@@ -475,7 +475,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                 <button type="submit" id="saveTaskAssignmentButton" disabled title="Please log in to submit changes">Save Member Assignments</button>
             <?php endif; ?>
 
-            <!-- Reserve section -->
+            <!-- Reserve section 
             <?php
             if (!empty($allRoommates) && !empty($tasksForAssignmentTable)) {
                 // Create an array of all roommate IDs
@@ -513,6 +513,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                 }
             }
             ?>
+            -->
         </form>
         <?php else: echo "<p>Task list for assignments not available.</p>"; endif; ?>
     </div>

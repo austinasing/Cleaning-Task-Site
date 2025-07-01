@@ -109,7 +109,8 @@ INSERT INTO taskteams (taskname) VALUES
 ('toilet_back'),
 ('toilet_front'),
 ('garbage'),
-('hallway');
+('hallway'),
+('reserve');
 
 CREATE TABLE wishlist(
     id INT AUTO_INCREMENT PRIMARY KEY,
