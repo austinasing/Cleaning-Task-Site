@@ -86,7 +86,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
         <?php endif; ?>
     </div>
     
-    <img class='mural'src='/files/public_html/pics/seventwo_trans_bg.png' alt='seven point two mural'>
+    <img class='mural'src='../pics/seventwo_trans_bg.png' alt='seven point two mural'>
 
     <!-- Task Sign Off -->
     <div class="task-section" id="subtask-assignment-section">
@@ -98,7 +98,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <div class="task-group-container" id="task-group-kitchen">
                 <div class="task-header">
                     <div class="task-title">Kitchen</div>
-                    <img class = 'task-gif' src='/files/public_html/pics/kitchen.gif'>
+                    <img class = 'task-gif' src='../pics/kitchen.gif'>
                 </div>
                 
                 <div class="subtask-success-message-<?= $kitchenThursData['id'] ?> message success" style="display:none;">Kitchen (Thursday) assignments saved!</div>
@@ -191,7 +191,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
             <div class="task-group-container" id="task-group-toilet">
                 <div class="task-header">
                     <div class="task-title">Toilet</div>
-                    <img class = 'task-gif' src='/files/public_html/pics/toilet.gif'>
+                    <img class = 'task-gif' src='../pics/toilet.gif'>
                 </div>
                 
                 <div class="subtask-success-message-<?= $toiletFrontData['id'] ?> message success" style="display:none;">Toilet (Front) assignments saved!</div>
@@ -291,7 +291,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                             <div class="team-info">No members assigned yet</div>
                         <?php endif; ?>
                     </div>
-                    <img class='task-gif' src='/files/public_html/pics/shower2.gif'>
+                    <img class='task-gif' src='../pics/shower2.gif'>
                 </div>
                 <div class="subtask-success-message-<?= $task['id'] ?> message success" style="display:none;">Assignments saved!</div>
                 <?php if (empty($task['subtasks'])): ?>
@@ -341,7 +341,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                             <div class="team-info">No members assigned yet</div>
                         <?php endif; ?>
                     </div>
-                    <img class='task-gif' src='/files/public_html/pics/hallway.gif'>
+                    <img class='task-gif' src='../pics/hallway.gif'>
                 </div>
                 <div class="subtask-success-message-<?= $task['id'] ?> message success" style="display:none;">Assignments saved!</div>
                 <?php if (empty($task['subtasks'])): ?> <p>No subtasks found for this task.</p>
@@ -388,7 +388,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                             <div class="team-info">No members assigned yet</div>
                         <?php endif; ?>
                     </div>
-                    <img class='task-gif' src='/files/public_html/pics/trash.gif'>
+                    <img class='task-gif' src='../pics/trash.gif'>
                 </div>
                 <div class="subtask-success-message-<?= $task['id'] ?> message success" style="display:none;">Assignments saved!</div>
                  <?php if (empty($task['subtasks'])): ?> <p>No subtasks found for this task.</p>
