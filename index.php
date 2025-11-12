@@ -331,7 +331,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                                 <?php 
                                                     $defaultBlockDay = 1;
                                                     $blockDay = $defaultBlockDay;
-                                                    if ($subtaskName === 'Mid-Week Drains (Thurs)') {
+                                                    if ($subtaskName === 'signature[17]') {
                                                         $blockDay = 5; // Override
                                                     }
                                                     if ($blockDay !== null) {
@@ -443,9 +443,9 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                         <?php 
                                         $defaultBlockDay = 1;
                                         $blockDay = $defaultBlockDay;
-                                        if ($subtaskName === 'Check Bags (Tue)') {
+                                        if ($subtaskName === 'signature[41]') {
                                             $blockDay = 3; // Override
-                                        } else if ($subtaskName === 'Check Bags (Thur)') {
+                                        } else if ($subtaskName === 'signature[41]') {
                                             $blockDay = 5; // Override
                                         }
                                         if ($blockDay !== null) {
