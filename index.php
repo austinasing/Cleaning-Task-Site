@@ -333,7 +333,10 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                                 $blockDay = $defaultBlockDay;
                                                 if ($subtaskName === 'Mid-Week Drains (Thurs)') {
                                                     $blockDay = 5; // Override
-                                                }?>>
+                                                }?
+                                                if ($blockDay !== null) {
+                                                    echo 'data-blockout-day="' . $blockDay . '"';
+                                                }>>
                                             <option value=""> </option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
@@ -442,6 +445,9 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                             $blockDay = 3; // Override
                                         } else if ($subtaskName === 'Check Bags (Thur)') {
                                             $blockDay = 5; // Override
+                                        }
+                                        if ($blockDay !== null) {
+                                            echo 'data-blockout-day="' . $blockDay . '"';
                                         }
                                         ?>>
                                             <option value=""> </option>
