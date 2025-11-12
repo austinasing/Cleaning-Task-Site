@@ -329,14 +329,16 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                                 data-task-variant-name="<?= $task['taskname'] ?>"
                                                 <?php if (!$is_logged_in) echo 'disabled'; ?>
                                                 <?php 
-                                                $defaultBlockDay = 1;
-                                                $blockDay = $defaultBlockDay;
-                                                if ($subtaskName === 'Mid-Week Drains (Thurs)') {
-                                                    $blockDay = 5; // Override
-                                                }?
-                                                if ($blockDay !== null) {
-                                                    echo 'data-blockout-day="' . $blockDay . '"';
-                                                }>>
+                                                    $defaultBlockDay = 1;
+                                                    $blockDay = $defaultBlockDay;
+                                                    if ($subtaskName === 'Mid-Week Drains (Thurs)') {
+                                                        $blockDay = 5; // Override
+                                                    }
+                                                    if ($blockDay !== null) {
+                                                        echo 'data-blockout-day="' . $blockDay . '"';
+                                                    }
+                                                ?>
+                                        >
                                             <option value=""> </option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
