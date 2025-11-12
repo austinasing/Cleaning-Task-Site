@@ -10,32 +10,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const now = new Date();
     const currentDay = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
     const currentHour = now.getHours(); // 0-23
-    // Rule 1: Always blocked BEFORE Monday 12:00 PM (noon).
-    if (currentDay === 1 && currentHour < 12) {
-      return true;
-    }
-    // Rule 2: Always blocked ON or AFTER 6:00 AM on the triggerDay.
-    if (currentDay === triggerDay && currentHour >= 6) {
-      return true;
-    }
-    // Rule 3: Handle days BETWEEN the triggerDay and the next Monday.
+
     if (triggerDay === 1) {
-      // Trigger: Mon 6AM. Blocked: Tue, Wed, Thu, Fri, Sat, Sun.
-      if (currentDay > 1 || currentDay === 0) {
-        return true;
+      if (currentDay === 1 && currentHour >= 6 && currentHour < 12) {
+        return true; // Blocked
       }
     } else if (triggerDay === 3) {
-      // Trigger: Wed 6AM. Blocked: Thu, Fri, Sat, Sun.
-      if (currentDay > 3 || currentDay === 0) {
+      if (currentDay === 3 && currentHour >= 6) {
+        return true;
+      }
+      if (currentDay === 4 || currentDay === 5 || currentDay === 6 || currentDay === 0) {
+        return true;
+      }
+      if (currentDay === 1 && currentHour < 12) {
         return true;
       }
     } else if (triggerDay === 5) {
-      // Trigger: Fri 6AM. Blocked: Sat, Sun.
-      if (currentDay > 5 || currentDay === 0) {
+      if (currentDay === 5 && currentHour >= 6) {
+        return true;
+      }
+      if (currentDay === 6 || currentDay === 0) {
+        return true;
+      }
+      if (currentDay === 1 && currentHour < 12) {
         return true;
       }
     }
-    // If none of the blockout rules match, it's not blocked.
     return false;
   }
 
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Target the blockouts
-    
+
   }
   initializeSubtaskBlockouts();
 
