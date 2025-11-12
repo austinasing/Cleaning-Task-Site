@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
         select.getAttribute('data-blockout-day'),
         10
       );
+      console.log(triggerDay)
       
       // Check if the day is valid and if submission is blocked
       if (triggerDay && isSubmissionBlocked(triggerDay)) {
@@ -60,9 +61,6 @@ document.addEventListener('DOMContentLoaded', function () {
         select.style.cursor = 'not-allowed';
       }
     });
-
-    // Target the blockouts
-
   }
   initializeSubtaskBlockouts();
 
