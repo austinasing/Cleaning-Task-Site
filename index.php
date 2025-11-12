@@ -133,8 +133,12 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 }
                                 if ($currentVariantSubtask && !empty($kitchenThursData['team_members'])):
                                 ?>
-                                <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
-                                        data-task-variant-name="kitchen_thurs" <?php if (!$is_logged_in) echo 'disabled'; ?>>
+                                <select 
+                                name="signature[<?= $currentVariantSubtask['id'] ?>]"
+                                class="person-select" 
+                                data-task-variant-name="kitchen_thurs"
+                                <?php if (!$is_logged_in) echo 'disabled'; ?>
+                                data-blockout-day="5">
                                     <option value=""> </option>
                                     <?php foreach ($kitchenThursData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
@@ -151,8 +155,11 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 }
                                 if ($currentVariantSubtask && !empty($kitchenSunData['team_members'])):
                                 ?>
-                                <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
-                                        data-task-variant-name="kitchen_sun" <?php if (!$is_logged_in) echo 'disabled'; ?>>
+                                <select name="signature[<?= $currentVariantSubtask['id'] ?>]"
+                                class="person-select" 
+                                data-task-variant-name="kitchen_sun"
+                                <?php if (!$is_logged_in) echo 'disabled'; ?>
+                                data-blockout-day="1">
                                     <option value=""> </option>
                                     <?php foreach ($kitchenSunData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
@@ -226,8 +233,12 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 }
                                 if ($currentVariantSubtask && !empty($toiletFrontData['team_members'])):
                                 ?>
-                                <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
-                                        data-task-variant-name="toilet_front" <?php if (!$is_logged_in) echo 'disabled'; ?>>
+                                <select
+                                name="signature[<?= $currentVariantSubtask['id'] ?>]"
+                                class="person-select" 
+                                data-task-variant-name="toilet_front"
+                                <?php if (!$is_logged_in) echo 'disabled'; ?>
+                                data-blockout-day="1">
                                     <option value=""> </option>
                                     <?php foreach ($toiletFrontData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
@@ -244,8 +255,12 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                  }
                                 if ($currentVariantSubtask && !empty($toiletBackData['team_members'])):
                                 ?>
-                                <select name="signature[<?= $currentVariantSubtask['id'] ?>]" class="person-select" 
-                                        data-task-variant-name="toilet_back" <?php if (!$is_logged_in) echo 'disabled'; ?>>
+                                <select
+                                name="signature[<?= $currentVariantSubtask['id'] ?>]"
+                                class="person-select" 
+                                data-task-variant-name="toilet_back"
+                                <?php if (!$is_logged_in) echo 'disabled'; ?>
+                                data-blockout-day="1">
                                     <option value=""> </option>
                                     <?php foreach ($toiletBackData['team_members'] as $member): ?>
                                     <option value="<?= htmlspecialchars($member) ?>" <?= ($currentVariantSubtask['signature'] === $member) ? 'selected' : '' ?>>
@@ -309,8 +324,16 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 <tr>
                                     <td><?= htmlspecialchars($subtask['subtask']) ?></td>
                                     <td>
-                                        <select name="signature[<?= $subtask['id'] ?>]" class="person-select" 
-                                                data-task-variant-name="<?= $task['taskname'] ?>" <?php if (!$is_logged_in) echo 'disabled'; ?>>
+                                        <select name="signature[<?= $subtask['id'] ?>]"
+                                                class="person-select" 
+                                                data-task-variant-name="<?= $task['taskname'] ?>"
+                                                <?php if (!$is_logged_in) echo 'disabled'; ?>
+                                                <?php 
+                                                $defaultBlockDay = 1;
+                                                $blockDay = $defaultBlockDay;
+                                                if ($subtaskName === 'Mid-Week Drains (Thurs)') {
+                                                    $blockDay = 5; // Override
+                                                }?>>
                                             <option value=""> </option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
@@ -356,8 +379,12 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 <tr>
                                     <td><?= htmlspecialchars($subtask['subtask']) ?></td>
                                     <td>
-                                        <select name="signature[<?= $subtask['id'] ?>]" class="person-select" 
-                                                data-task-variant-name="<?= $task['taskname'] ?>" <?php if (!$is_logged_in) echo 'disabled'; ?>>
+                                        <select
+                                        name="signature[<?= $subtask['id'] ?>]"
+                                        class="person-select" 
+                                        data-task-variant-name="<?= $task['taskname'] ?>"
+                                        <?php if (!$is_logged_in) echo 'disabled'; ?>
+                                        data-blockout-day="1">
                                             <option value=""> </option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
@@ -403,8 +430,20 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                 <tr>
                                     <td><?= htmlspecialchars($subtask['subtask']) ?></td>
                                     <td>
-                                        <select name="signature[<?= $subtask['id'] ?>]" class="person-select" 
-                                                data-task-variant-name="<?= $task['taskname'] ?>" <?php if (!$is_logged_in) echo 'disabled'; ?>>
+                                        <select
+                                        name="signature[<?= $subtask['id'] ?>]"
+                                        class="person-select" 
+                                        data-task-variant-name="<?= $task['taskname'] ?>"
+                                        <?php if (!$is_logged_in) echo 'disabled'; ?>
+                                        <?php 
+                                        $defaultBlockDay = 1;
+                                        $blockDay = $defaultBlockDay;
+                                        if ($subtaskName === 'Check Bags (Tue)') {
+                                            $blockDay = 3; // Override
+                                        } else if ($subtaskName === 'Check Bags (Thur)') {
+                                            $blockDay = 5; // Override
+                                        }
+                                        ?>>
                                             <option value=""> </option>
                                             <?php foreach ($task['team_members'] as $member): ?>
                                             <option value="<?= htmlspecialchars($member) ?>" <?= ($subtask['signature'] === $member) ? 'selected' : '' ?>>
