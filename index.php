@@ -331,7 +331,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                                 <?php 
                                                     $defaultBlockDay = 1;
                                                     $blockDay = $defaultBlockDay;
-                                                    if ($subtaskName === 'signature[17]') {
+                                                    if ($subtask['id'] == 17) {
                                                         $blockDay = 5; // Override
                                                     }
                                                     if ($blockDay !== null) {
@@ -441,16 +441,18 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                         data-task-variant-name="<?= $task['taskname'] ?>"
                                         <?php if (!$is_logged_in) echo 'disabled'; ?>
                                         <?php 
-                                        $defaultBlockDay = 1;
-                                        $blockDay = $defaultBlockDay;
-                                        if ($subtaskName === 'signature[41]') {
-                                            $blockDay = 3; // Override
-                                        } else if ($subtaskName === 'signature[41]') {
-                                            $blockDay = 5; // Override
-                                        }
-                                        if ($blockDay !== null) {
-                                            echo 'data-blockout-day="' . $blockDay . '"';
-                                        }
+                                            $defaultBlockDay = 1; // Default: Monday
+                                            $blockDay = $defaultBlockDay;                                            
+                                            if ($subtask['id'] == 41) { 
+                                                $blockDay = 3; // Override: Block on Wednesday
+                                            } else if ($subtask['id'] == 42) {
+                                                $blockDay = 5; // Override: Block on Friday
+                                            }
+
+                                            if ($blockDay !== null) {
+                                                echo 'data-blockout-day="' . $blockDay . '"';
+                                            }
+                                        ?>
                                         ?>>
                                             <option value=""> </option>
                                             <?php foreach ($task['team_members'] as $member): ?>
