@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     } else if (triggerDay === 3) {
       if (currentDay === 3 && currentHour >= 6) {
+        console.log('triggered!')
         return true;
       }
       if (currentDay === 4 || currentDay === 5 || currentDay === 6 || currentDay === 0) {
