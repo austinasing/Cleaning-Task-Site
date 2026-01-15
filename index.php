@@ -36,8 +36,8 @@ function findTaskByName($tasksArray, $name) {
 }
 
 // Assign specific task data to variables
-$kitchenThursData = findTaskByName($allTasksRaw, 'Kitchen (Thurs)');
-$kitchenSunData = findTaskByName($allTasksRaw, 'Kitchen (Sun)');
+$kitchenThursData = findTaskByName($allTasksRaw, 'Kitchen (Fri)');
+$kitchenSunData = findTaskByName($allTasksRaw, 'Kitchen (Mon)');
 $toiletFrontData = findTaskByName($allTasksRaw, 'Toilet (Front)');
 $toiletBackData = findTaskByName($allTasksRaw, 'Toilet (Back)');
 $bathroomData = findTaskByName($allTasksRaw, 'Bathroom');
