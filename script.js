@@ -60,24 +60,27 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function initializeSubtaskBlockouts() {
-    // Find all person-selects that have the data attribute
+    // 1. Find all person-selects AND supply-status-selects
     const selects = document.querySelectorAll(
-      '.person-select[data-blockout-day]'
+      '.person-select[data-blockout-day], .supply-status-select'
     );
 
     selects.forEach((select) => {
-      const triggerDay = parseInt(
-        select.getAttribute('data-blockout-day'),
-        10
-      );
-      console.log(select)
+      // 2. Determine which trigger to use.
+      // If it's a person-select, use its data-blockout-day.
+      // If it's a supply-status-select, default to Trigger 5 (Saturday logic).
+      let dayAttr = select.getAttribute('data-blockout-day');
+      let triggerDay = dayAttr ? parseInt(dayAttr, 10) : 5; 
       
-      // Check if the day is valid and if submission is blocked
-      if (triggerDay && isSubmissionBlocked(triggerDay)) {
-        // This is what grays it out and makes it un-selectable
+      // 3. Apply the blocking logic
+      if (isSubmissionBlocked(triggerDay)) {
+        // This physically grays out the select box and prevents interaction
         select.disabled = true;
         select.style.opacity = '0.5';
         select.style.cursor = 'not-allowed';
+        
+        // Add a hover hint so users know why it's blocked
+        select.title = "This section is locked until Tuesday at 12:00 PM.";
       }
     });
   }
