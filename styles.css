@@ -248,8 +248,28 @@ select.incomplete {
     overflow-wrap: break-word; /* Wraps long text to the next line */
 }
 
+#rules {
+    padding: 20px;
+}
+
+#rules ul {
+    width: fit-content;
+    margin: 0 auto;
+    padding-left: 0;
+    list-style-position: inside;
+}
+
+#rules li {
+    padding: 2px 0;
+}
+
 .hidden {
     display: none;
+}
+
+.button-container {
+    text-align: center;
+    margin: 10px 0; 
 }
 
 .modal {
