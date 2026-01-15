@@ -9,39 +9,50 @@ document.addEventListener('DOMContentLoaded', function () {
   // ==========================================
   // Blockout Logic
   // ==========================================
-  const DAY_MON = 1; //TODO: clean this up doesn't do anything
-  const DAY_WED = 3;
-  const DAY_FRI = 5;
+  
+  //If you pass 1: Blocked Tuesday 6 AM – 12 PM.
+  //If you pass 3: Blocked starting Thursday 6 AM through Tuesday 12 PM.
+  //If you pass 5: Blocked starting Saturday 6 AM through Tuesday 12 PM.
+  // Tues 12pm is when the week resets
+
 
   function isSubmissionBlocked(triggerDay) {
     const now = new Date();
     const currentDay = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
     const currentHour = now.getHours(); // 0-23
+    
+    // We shift the trigger logic forward:
+    // If PHP sends 1 (Mon), it becomes 2 (Tue)
+    // If PHP sends 3 (Wed), it becomes 4 (Thu)
+    // If PHP sends 5 (Fri), it becomes 6 (Sat)
     const adjustedTrigger = triggerDay + 1;
 
-    if (adjustedTrigger === 1) {
-      if (currentDay === 1 && currentHour >= 6 && currentHour < 12) {
-        return true; // Blocked
+    if (adjustedTrigger === 2) { // Logic for Tuesday (Trigger 1 + 1)
+      if (currentDay === 2 && currentHour >= 6 && currentHour < 12) {
+        return true; 
       }
-    } else if (adjustedTrigger === 3) {
-      if (currentDay === 3 && currentHour >= 6) {
-        console.log('triggered!')
+    } else if (adjustedTrigger === 4) { // Logic for Thursday (Trigger 3 + 1)
+      if (currentDay === 4 && currentHour >= 6) {
         return true;
       }
-      if (currentDay === 4 || currentDay === 5 || currentDay === 6 || currentDay === 0) {
+      // Blocked Fri(5), Sat(6), Sun(0), Mon(1)
+      if (currentDay === 5 || currentDay === 6 || currentDay === 0 || currentDay === 1) {
         return true;
       }
-      if (currentDay === 1 && currentHour < 12) {
+      // Blocked Tuesday(2) until 12pm
+      if (currentDay === 2 && currentHour < 12) {
         return true;
       }
-    } else if (adjustedTrigger === 5) {
-      if (currentDay === 5 && currentHour >= 6) {
+    } else if (adjustedTrigger === 6) { // Logic for Saturday (Trigger 5 + 1)
+      if (currentDay === 6 && currentHour >= 6) {
         return true;
       }
-      if (currentDay === 6 || currentDay === 0) {
+      // Blocked Sun(0), Mon(1)
+      if (currentDay === 0 || currentDay === 1) {
         return true;
       }
-      if (currentDay === 1 && currentHour < 12) {
+      // Blocked Tuesday(2) until 12pm
+      if (currentDay === 2 && currentHour < 12) {
         return true;
       }
     }

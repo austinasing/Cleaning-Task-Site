@@ -348,7 +348,7 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                                     if ($subtask['id'] == 17) {
                                                         $blockDay = 5; // Override
                                                     }
-                                                    if ($blockDay !== null) {
+                                                    if ($blockDay !== null) { // FIXME: what is happening here
                                                         echo 'data-blockout-day="' . $blockDay . '"';
                                                     }
                                                 ?>
@@ -455,12 +455,12 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
                                         data-task-variant-name="<?= $task['taskname'] ?>"
                                         <?php if (!$is_logged_in) echo 'disabled'; ?>
                                         <?php 
-                                            $defaultBlockDay = 1; // Default: Monday
+                                            $defaultBlockDay = 1; // Default: Tue
                                             $blockDay = $defaultBlockDay;                                            
                                             if ($subtask['id'] == 41) { 
-                                                $blockDay = 3; // Override: Block on Wednesday
+                                                $blockDay = 3; // Override: Block on Thurs
                                             } else if ($subtask['id'] == 42) {
-                                                $blockDay = 5; // Override: Block on Friday
+                                                $blockDay = 5; // Override: Block on Sat
                                             }
 
                                             if ($blockDay !== null) {
