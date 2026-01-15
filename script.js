@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ==========================================
   // Blockout Logic
   // ==========================================
-  const DAY_MON = 1;
+  const DAY_MON = 1; //TODO: clean this up doesn't do anything
   const DAY_WED = 3;
   const DAY_FRI = 5;
 
@@ -17,12 +17,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const now = new Date();
     const currentDay = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
     const currentHour = now.getHours(); // 0-23
+    const adjustedTrigger = triggerDay + 1;
 
-    if (triggerDay === 1) {
+    if (adjustedTrigger === 1) {
       if (currentDay === 1 && currentHour >= 6 && currentHour < 12) {
         return true; // Blocked
       }
-    } else if (triggerDay === 3) {
+    } else if (adjustedTrigger === 3) {
       if (currentDay === 3 && currentHour >= 6) {
         console.log('triggered!')
         return true;
@@ -33,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (currentDay === 1 && currentHour < 12) {
         return true;
       }
-    } else if (triggerDay === 5) {
+    } else if (adjustedTrigger === 5) {
       if (currentDay === 5 && currentHour >= 6) {
         return true;
       }
