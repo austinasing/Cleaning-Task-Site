@@ -7,6 +7,73 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   
   // ==========================================
+  // Blockout Logic
+  // ==========================================
+  const DAY_MON = 1;
+  const DAY_WED = 3;
+  const DAY_FRI = 5;
+
+  function isSubmissionBlocked(triggerDay) {
+    const now = new Date();
+    const currentDay = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+    const currentHour = now.getHours(); // 0-23
+
+    if (triggerDay === 1) {
+      if (currentDay === 1 && currentHour >= 6 && currentHour < 12) {
+        return true; // Blocked
+      }
+    } else if (triggerDay === 3) {
+      if (currentDay === 3 && currentHour >= 6) {
+        console.log('triggered!')
+        return true;
+      }
+      if (currentDay === 4 || currentDay === 5 || currentDay === 6 || currentDay === 0) {
+        return true;
+      }
+      if (currentDay === 1 && currentHour < 12) {
+        return true;
+      }
+    } else if (triggerDay === 5) {
+      if (currentDay === 5 && currentHour >= 6) {
+        return true;
+      }
+      if (currentDay === 6 || currentDay === 0) {
+        return true;
+      }
+      if (currentDay === 1 && currentHour < 12) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function initializeSubtaskBlockouts() {
+    // Find all person-selects that have the data attribute
+    const selects = document.querySelectorAll(
+      '.person-select[data-blockout-day]'
+    );
+
+    selects.forEach((select) => {
+      const triggerDay = parseInt(
+        select.getAttribute('data-blockout-day'),
+        10
+      );
+      console.log(select)
+      
+      // Check if the day is valid and if submission is blocked
+      if (triggerDay && isSubmissionBlocked(triggerDay)) {
+        // This is what grays it out and makes it un-selectable
+        select.disabled = true;
+        select.style.opacity = '0.5';
+        select.style.cursor = 'not-allowed';
+      }
+    });
+  }
+  initializeSubtaskBlockouts();
+
+
+
+  // ==========================================
   // Team Assignment Form Handling
   // ==========================================
   const taskAssignmentForm = document.getElementById('taskAssignmentForm');
@@ -169,12 +236,6 @@ document.addEventListener('DOMContentLoaded', function () {
       let selectsToProcess;
 
       if (taskVariantName) {
-        // For layouts where selects are NOT children of the form, but associated by data-task-variant-name
-        // This targets selects anywhere in the document with the matching variant name.
-        // Ensure your HTML structure allows these selects to be globally unique if needed,
-        // or narrow the querySelector if they are within a common parent of the form and selects.
-        // For the provided index.php, selects are in a table, and forms are in table headers.
-        // A common ancestor is the .task-group-container or .task-container
         const container = currentForm.closest('.task-group-container, .task-container');
         if (container) {
             selectsToProcess = container.querySelectorAll(
