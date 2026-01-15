@@ -88,6 +88,20 @@ $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday
     
     <img class='mural'src='../pics/seventwo_trans_bg.png' alt='seven point two mural'>
 
+    <!-- Hallway rules -->
+    <div class="button-container">
+        <button id="toggleButton">Show/Hide Hallway Rules</button>
+    </div>
+    <div class="section hidden" id="rules">
+        <ul><b>Hallway Rules</b></ul>
+            <li>Tasks are done by Monday night unless specified</li>
+            <li>Everyone contributes a monthly €7 to the hallway account</li>
+            <li>Missed task: €5 fine per day up to €15 (the task still has to get done)</li>
+            <li>After you do a late task, add your name(s) and the day you did it to the late task section.</li>
+            <li>Missing a mid-week task (empty trash or clean shower drain) results in a single €5 fine</li>
+            <li>Alternative to €5 fine: cleaning a sink of dishes or cleaning the oven (will be expanded soon)</li>
+    </div>
+
     <!-- Task Sign Off -->
     <div class="task-section" id="subtask-assignment-section">
         <?php if (empty($allTasksRaw)): ?>

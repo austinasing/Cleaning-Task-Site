@@ -248,6 +248,9 @@ select.incomplete {
     overflow-wrap: break-word; /* Wraps long text to the next line */
 }
 
+.hidden {
+    display: none;
+}
 
 .modal {
     display: none; /* Hidden by default */

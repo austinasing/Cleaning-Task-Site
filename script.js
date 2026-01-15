@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
+  // Rules Handling
+  const toggleButton = document.getElementById('toggleButton');
+  const rulesDiv = document.getElementById('rules');
+  toggleButton.addEventListener('click', function() {
+    rulesDiv.classList.toggle('hidden');
+  });
+  
   // ==========================================
   // Team Assignment Form Handling
   // ==========================================
@@ -262,6 +269,29 @@ document.addEventListener('DOMContentLoaded', function () {
         alert('An error occurred while updating the subtask assignments.');
       });
   }
+
+  // ==========================================
+  // Button Blockout Logic
+  // ==========================================
+  function isBlockoutActive(blockoutDayIndex, blockoutHour, blockoutMinute) {
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 (Sun) to 6 (Sat)
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // The logic: Blockout is active if the current day is the blockout day,
+    // AND the current time is 06:00 AM or later.
+    if (currentDay === blockoutDayIndex) {
+      if (currentHour > blockoutHour) {
+        return true;
+      }
+      if (currentHour === blockoutHour && currentMinute >= blockoutMinute) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 
   // ==========================================
   // Supplies Form Handling
