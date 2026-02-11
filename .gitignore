@@ -1,0 +1,8 @@
+development_notes.txt
+.claude
+sveltekit-app/static/
+clear-weeks.js
+clear-overridges.js
+task_rotation_16.js
+init-mongo.js
+fill-mongo.js
