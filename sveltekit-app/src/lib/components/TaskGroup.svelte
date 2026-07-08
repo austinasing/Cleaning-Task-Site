@@ -268,7 +268,7 @@
 		background: #c0c0c0;
 	}
 
-	.task-group-header:hover {
+	.header:hover {
 		background: #d0d0d0;
 	}
 

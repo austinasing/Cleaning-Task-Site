@@ -67,6 +67,13 @@ export const GET: RequestHandler = async ({ url }) => {
 	const usersColl = await getUsersCollection();
 	const allUsers = await usersColl.find({ active: true }).toArray();
 
+	// Users with an active override (present in some task group's static members)
+	// must not also appear via rotation, whether in that same group or their original one.
+	// userId on static members is an ObjectId, so normalize to string for comparisons.
+	const overriddenUserIds = new Set(
+		taskGroups.flatMap((group) => (group.members || []).map((m) => m.userId.toString()))
+	);
+
 	// Compute task group members: merge override users (static) + rotating users (dynamic)
 	const rotationPeriod = week.rotationPeriod || 1;
 	const taskGroupsWithDynamicMembers = taskGroups.map((group) => {
@@ -74,22 +81,23 @@ export const GET: RequestHandler = async ({ url }) => {
 		//    These users are in the group's static members array, regardless of their taskTeam
 		const overrideMembers = group.members || [];
 
-		// 2. Add rotating users (those with a taskTeam assigned to this group for this period)
+		// 2. Add rotating users (those with a taskTeam assigned to this group for this period),
+		//    excluding anyone who has an override (here or elsewhere) so they aren't double-counted
 		const assignedTeams = getTeamsForTaskGroup(group.name, rotationPeriod);
 		const rotatingMembers = allUsers
-			.filter((user) => user.taskTeam && assignedTeams.includes(user.taskTeam))
+			.filter(
+				(user) =>
+					user.taskTeam &&
+					assignedTeams.includes(user.taskTeam) &&
+					!overriddenUserIds.has(user._id!.toString())
+			)
 			.map((user) => ({
 				userId: user._id!.toString(),
 				name: user.name
 			}));
 
-		// 3. Merge both, avoiding duplicates (override members take precedence)
-		const allMembers = [...overrideMembers];
-		for (const member of rotatingMembers) {
-			if (!allMembers.some((m) => m.userId === member.userId)) {
-				allMembers.push(member);
-			}
-		}
+		// 3. Merge both (rotating members are already guaranteed not to collide with overrides)
+		const allMembers = [...overrideMembers, ...rotatingMembers];
 
 		return {
 			...group,
