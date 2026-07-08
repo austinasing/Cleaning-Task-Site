@@ -13,9 +13,6 @@ services:
       TZ: ${TZ}
       ORIGIN: ${ORIGIN}
       PORT: ${PORT}
-    depends_on:
-      mongodb:
-        condition: service_healthy
     networks:
       - app-network
     # Not published to the host - only the caddy reverse proxy talks to it.
@@ -49,59 +46,7 @@ services:
       - "80:80"
       - "443:443"
 
-  # MongoDB Database
-  mongodb:
-    image: mongo:7.0
-    container_name: cleaning-tasks-db
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
-      TZ: Europe/Amsterdam
-    volumes:
-      - mongodb_data:/data/db
-      # Run initialization script on first startup
-      - ./docker/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-    networks:
-      - app-network
-    # Bound to localhost only - reachable for admin/debugging via an SSH
-    # tunnel (ssh -L 27017:localhost:27017 user@server), never public.
-    ports:
-      - "127.0.0.1:27017:27017"
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      start_period: 10s
-      retries: 5
-
-  # Mongo Express - Web UI for MongoDB
-  # Access via SSH tunnel: ssh -L 8081:localhost:8081 user@server
-  # then browse http://localhost:8081 on your own machine.
-  mongo-express:
-    image: mongo-express:1.0.2
-    container_name: cleaning-tasks-admin
-    restart: unless-stopped
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_ROOT_PASSWORD}
-      TZ: Europe/Amsterdam
-    depends_on:
-      - mongodb
-    networks:
-      - app-network
-    # Bound to localhost only - see access note above. This UI should
-    # never be reachable from the public internet.
-    ports:
-      - "127.0.0.1:8081:8081"
-
 volumes:
-  mongodb_data:
-    driver: local
   caddy_data:
     driver: local
   caddy_config:
