@@ -9,6 +9,7 @@
  */
 
 import { json } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import type { RequestHandler } from './$types';
 import { getUsersCollection } from '$lib/server/db';
 import { verifyPassword, createToken } from '$lib/server/auth';
@@ -54,7 +55,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
-		secure: false, // Set to true in production with HTTPS
+		secure: !dev, // HTTPS-only in production; allows plain HTTP in local dev
 		maxAge: 60 * 60 * 24 * 30 // 30 days in seconds
 	});
 

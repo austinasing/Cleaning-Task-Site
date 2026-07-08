@@ -1,6 +1,7 @@
 <script lang="ts">
 	import WeekNavigator from '$lib/components/WeekNavigator.svelte';
 	import TaskGroup from '$lib/components/TaskGroup.svelte';
+	import SiteHeader from '$lib/components/SiteHeader.svelte';
 	import { currentUser } from '$lib/stores/auth';
 
 	let { data } = $props();
@@ -11,7 +12,6 @@
 
 	const userName = $derived($currentUser?.name ?? '');
 	const isCompleted = $derived(week?.status === 'completed');
-	const isAdmin = $derived($currentUser?.role === 'admin' || $currentUser?.role === 'accountant');
 
 	const myGroup = $derived(
 		taskGroups.find((g: any) =>
@@ -28,11 +28,13 @@
 </svelte:head>
 
 {#if week && allWeeks.length > 0}
+	<SiteHeader activePage="tasks" />
+
 	<WeekNavigator {allWeeks} currentWeekId={String(week._id)} />
 
 	{#if isCompleted}
 		<div class="week-status-banner">
-			This week has been completed. Tasks are read-only.
+			Completed
 		</div>
 	{/if}
 
@@ -44,7 +46,7 @@
 				weekStartDate={week.startDate}
 				expanded={true}
 				readonly={isCompleted}
-				{isAdmin}
+				completedWeek={isCompleted}
 			/>
 		{/if}
 
@@ -58,7 +60,7 @@
 					weekStartDate={week.startDate}
 					expanded={false}
 					readonly={isCompleted}
-					{isAdmin}
+					completedWeek={isCompleted}
 				/>
 			{/each}
 		{/if}
@@ -78,11 +80,14 @@
 
 	.section-label {
 		font-size: 0.8rem;
-		font-weight: 600;
+		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		color: var(--color-text-muted, #718096);
-		margin-bottom: 0.5rem;
+		color: #000;
+		background: #a0a0a0;
+		padding: 0.2rem 0.5rem;
+		margin-bottom: 0rem;
+		border: 2px inset #ddd;
 	}
 
 	.section-label.other {
@@ -90,28 +95,29 @@
 	}
 
 	.week-status-banner {
-		background: var(--color-info-bg, #d6eaf8);
-		color: var(--color-info, #3498db);
-		padding: 0.6rem 1rem;
-		border-radius: var(--radius, 8px);
+		background: #c0c0c0;
+		color: #000080;
+		padding: 0.5rem 0.75rem;
+		border: 2px inset #ddd;
 		text-align: center;
 		font-size: 0.9rem;
-		margin-bottom: 1rem;
+		margin-bottom: 0.75rem;
+		font-weight: 700;
 	}
 
 	.no-week-message {
 		text-align: center;
-		padding: 4rem 1rem;
-		background: white;
-		border-radius: var(--radius-lg, 12px);
+		padding: 3rem 1rem;
+		background: #c0c0c0;
+		border: 2px outset #ddd;
 	}
 
 	.no-week-message h2 {
-		color: var(--color-primary, #2c3e50);
+		color: #000;
 		margin-bottom: 0.5rem;
 	}
 
 	.no-week-message a {
-		color: var(--color-accent, #3498db);
+		color: #000080;
 	}
 </style>

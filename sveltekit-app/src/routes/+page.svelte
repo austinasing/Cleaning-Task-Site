@@ -1,6 +1,7 @@
 <script lang="ts">
 	import WeekNavigator from '$lib/components/WeekNavigator.svelte';
 	import TaskGroup from '$lib/components/TaskGroup.svelte';
+	import SiteHeader from '$lib/components/SiteHeader.svelte';
 	import { currentUser } from '$lib/stores/auth';
 
 	let { data } = $props();
@@ -8,6 +9,7 @@
 	const activeWeek = $derived(data.activeWeek);
 	const taskGroups = $derived(data.taskGroups || []);
 	const allWeeks = $derived(data.allWeeks || []);
+	const userEmojiMap = $derived(data.userEmojiMap || {});
 
 	const userName = $derived($currentUser?.name ?? '');
 	const isAdmin = $derived($currentUser?.role === 'admin' || $currentUser?.role === 'accountant');
@@ -28,9 +30,7 @@
 </svelte:head>
 
 {#if activeWeek && allWeeks.length > 0}
-	<div class="logo-container">
-		<img src="/pics/seventwo_trans_bg.png" alt="hallway logo" />
-	</div>
+	<SiteHeader activePage="tasks" />
 
 	<WeekNavigator {allWeeks} currentWeekId={String(activeWeek._id)} />
 
@@ -41,7 +41,7 @@
 				taskGroup={myGroup}
 				weekStartDate={activeWeek.startDate}
 				expanded={true}
-				{isAdmin}
+				{userEmojiMap}
 			/>
 		{/if}
 
@@ -49,14 +49,16 @@
 			{#if myGroup}
 				<div class="section-label other">Other Tasks</div>
 			{/if}
-			{#each otherGroups as taskGroup (taskGroup._id)}
-				<TaskGroup
-					{taskGroup}
-					weekStartDate={activeWeek.startDate}
-					expanded={false}
-					{isAdmin}
-				/>
-			{/each}
+			<div class="other-tasks-list">
+				{#each otherGroups as taskGroup (taskGroup._id)}
+					<TaskGroup
+						{taskGroup}
+						weekStartDate={activeWeek.startDate}
+						expanded={false}
+						{userEmojiMap}
+					/>
+				{/each}
+			</div>
 		{/if}
 	</div>
 {:else}
@@ -67,23 +69,6 @@
 {/if}
 
 <style>
-	:global(body) {
-		background-image: url('/pics/100px_tile.png');
-		background-repeat: repeat;
-		background-position: 0px 22px
-	}
-
-	.logo-container {
-	display: flex;
-	justify-content: center;
-	padding: 1rem 0;
-	}
-
-	.logo-container img {
-		max-width: 600px;
-		height: auto;
-	}
-
 	.task-groups-container {
 		display: flex;
 		flex-direction: column;
@@ -91,30 +76,38 @@
 
 	.section-label {
 		font-size: 0.8rem;
-		font-weight: 600;
+		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		color: var(--color-text-muted, #718096);
-		margin-bottom: 0.5rem;
+		color: #000;
+		background: #a0a0a0;
+		padding: 0.2rem 0.5rem;
+		margin-bottom: 0rem;
+		border: 2px inset #ddd;
 	}
 
 	.section-label.other {
 		margin-top: 1rem;
 	}
 
+	.other-tasks-list :global(.task-group) {
+		margin-bottom: 0;
+	}
+
 	.no-week-message {
 		text-align: center;
-		padding: 4rem 1rem;
-		background: white;
-		border-radius: var(--radius-lg, 12px);
+		padding: 3rem 1rem;
+		background: #c0c0c0;
+		border: 2px outset #ddd;
 	}
 
 	.no-week-message h2 {
-		color: var(--color-primary, #2c3e50);
+		color: #000;
 		margin-bottom: 0.5rem;
 	}
 
 	.no-week-message p {
-		color: var(--color-text-muted, #718096);
+		color: var(--color-text-muted, #444);
 	}
+
 </style>

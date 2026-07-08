@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { currentUser } from '$lib/stores/auth';
 	import { invalidateAll } from '$app/navigation';
+	import SiteHeader from '$lib/components/SiteHeader.svelte';
 
 	let { data } = $props();
 
@@ -56,10 +57,7 @@
 	<title>Wishlist</title>
 </svelte:head>
 
-<div class="page-header">
-	<h1>Wishlist</h1>
-	<p>Vote on items you'd like for the house</p>
-</div>
+<SiteHeader activePage="wishlist" />
 
 <!-- Add item form -->
 <form class="card add-form" onsubmit={addItem}>
@@ -110,51 +108,52 @@
 
 <style>
 	.add-form {
-		padding: 1rem;
-		margin-bottom: 1.5rem;
+		padding: 0.75rem;
+		margin-bottom: 0rem;
 	}
 
 	.add-row {
 		display: flex;
-		gap: 0.5rem;
+		gap: 0.4rem;
 	}
 
 	.add-row input {
 		flex: 1;
-		padding: 0.6rem 0.75rem;
-		border: 1px solid #ddd;
-		border-radius: var(--radius, 8px);
+		padding: 0.4rem 0.5rem;
+		border: 2px inset #ddd;
+		background: #fff;
 		font-size: 0.95rem;
 		outline: none;
+		font-family: inherit;
 	}
 
 	.add-row input:focus {
-		border-color: var(--color-primary, #2c3e50);
+		outline: 1px dotted #000;
 	}
 
 	.empty-state {
 		text-align: center;
-		color: var(--color-text-muted, #718096);
-		padding: 3rem;
+		color: #444;
+		padding: 2rem;
 	}
 
 	.wishlist-items {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0rem;
 	}
 
 	.wishlist-item {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.75rem 1rem;
+		padding: 0.5rem 0.75rem;
 	}
 
 	.item-main {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
+		gap: 0.5rem;
 		flex: 1;
 	}
 
@@ -162,26 +161,22 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		background: none;
-		border: 1px solid var(--color-border, #e2e8f0);
-		border-radius: var(--radius, 8px);
-		padding: 0.3rem 0.6rem;
+		background: #c0c0c0;
+		border: 2px outset #ddd;
+		padding: 0.2rem 0.5rem;
 		cursor: pointer;
-		color: var(--color-text-muted, #718096);
+		color: #000;
 		font-size: 0.8rem;
-		transition: all 0.15s;
-		min-width: 40px;
+		min-width: 36px;
 	}
 
-	.vote-btn:hover {
-		border-color: var(--color-accent, #3498db);
-		color: var(--color-accent, #3498db);
+	.vote-btn:active {
+		border-style: inset;
 	}
 
 	.vote-btn.voted {
-		background: var(--color-accent, #3498db);
-		border-color: var(--color-accent, #3498db);
-		color: white;
+		border-style: inset;
+		background: #a0a0a0;
 	}
 
 	.vote-count {

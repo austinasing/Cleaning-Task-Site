@@ -85,6 +85,13 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		update.emoji = body.emoji;
 	}
 
+	// Users can update their own email
+	if (isOwnProfile || isPrivileged) {
+		if (typeof body.email === 'string') {
+			update.email = body.email.trim().toLowerCase() || null;
+		}
+	}
+
 	if (body.preferences && typeof body.preferences.emailNotifications === 'boolean') {
 		update['preferences.emailNotifications'] = body.preferences.emailNotifications;
 	}
@@ -129,4 +136,35 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	}
 
 	return json({ user: result });
+};
+
+export const DELETE: RequestHandler = async ({ params, locals }) => {
+	if (!locals.user || locals.user.role !== 'admin') {
+		return json({ error: 'Unauthorized' }, { status: 401 });
+	}
+
+	const id = toObjectId(params.id);
+	if (!id) {
+		return json({ error: 'Invalid user ID' }, { status: 400 });
+	}
+
+	// Prevent admins from deleting themselves
+	if (locals.user.userId === params.id) {
+		return json({ error: 'Cannot delete your own account' }, { status: 400 });
+	}
+
+	const usersColl = await getUsersCollection();
+	const user = await usersColl.findOne({ _id: id });
+
+	if (!user) {
+		return json({ error: 'User not found' }, { status: 404 });
+	}
+
+	if (user.active) {
+		return json({ error: 'Only inactive users can be removed' }, { status: 400 });
+	}
+
+	await usersColl.deleteOne({ _id: id });
+
+	return json({ success: true });
 };

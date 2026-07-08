@@ -35,18 +35,11 @@
 	);
 </script>
 
-{#if isLastWeekOfPeriod}
-	<div class="rotation-warning">
-		<span class="warning-icon">&#9888;</span>
-		<span class="warning-text">Task rotation changes next week!</span>
-	</div>
-{/if}
-
 <div class="week-navigator">
 	{#if prevWeek}
-		<a href="/weeks/{prevWeek._id}" class="nav-arrow" title="Previous Week">&larr;</a>
+		<a href="/weeks/{prevWeek._id}" class="nav-arrow" title="Previous Week"><img src="/pics/next_red.png" alt="Previous" class="arrow-icon arrow-left" /></a>
 	{:else}
-		<span class="nav-arrow disabled">&larr;</span>
+		<span class="nav-arrow disabled"><img src="/pics/next_red.png" alt="" class="arrow-icon arrow-left" /></span>
 	{/if}
 
 	<div class="current-week">
@@ -60,9 +53,9 @@
 	</div>
 
 	{#if nextWeek}
-		<a href="/weeks/{nextWeek._id}" class="nav-arrow" title="Next Week">&rarr;</a>
+		<a href="/weeks/{nextWeek._id}" class="nav-arrow" title="Next Week"><img src="/pics/next_red.png" alt="Next" class="arrow-icon" /></a>
 	{:else}
-		<span class="nav-arrow disabled">&rarr;</span>
+		<span class="nav-arrow disabled"><img src="/pics/next_red.png" alt="" class="arrow-icon" /></span>
 	{/if}
 </div>
 
@@ -72,54 +65,68 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
-		padding: 0.75rem 1rem;
-		margin-bottom: 1rem;
-		background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
-		border: 1px solid #ffc107;
-		border-radius: 8px;
-		color: #856404;
-		font-weight: 500;
-		font-size: 0.95rem;
+		padding: 0.5rem 0.75rem;
+		margin-bottom: 0.75rem;
+		background: #c0c0c0;
+		border: 2px inset #ddd;
+		color: #806600;
+		font-weight: 700;
+		font-size: 0.9rem;
 	}
 
 	.warning-icon {
-		font-size: 1.1rem;
+		font-size: 1rem;
 	}
 
 	.week-navigator {
 		display: flex;
-		align-items: center;
+		align-items: stretch;
 		justify-content: center;
-		gap: 1.5rem;
-		margin-bottom: 2rem;
-		font-size: 1.2rem;
+		gap: 0.3rem;
+		margin-bottom: 1.25rem;
+		font-size: 1.1rem;
 	}
 	.nav-arrow {
-		font-size: 1.5rem;
-		font-weight: bold;
-		color: var(--color-primary, #2c3e50);
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		text-decoration: none;
-		padding: 0 0.5rem;
-		transition: color 0.15s;
+		padding: 0.15rem 0.3rem;
+		background: #c0c0c0;
+		border: 2px inset #ddd;
+		align-self: stretch;
 	}
-	.nav-arrow:hover {
-		color: var(--color-accent, #3498db);
+	.nav-arrow:active {
+		border-style: inset;
 	}
 	.nav-arrow.disabled {
-		color: #ccc;
+		opacity: 0.4;
 		cursor: not-allowed;
+	}
+	.arrow-icon {
+		display: block;
+		height: 1.2em;
+		width: auto;
+		image-rendering: pixelated;
+	}
+	.arrow-left {
+		transform: scaleX(-1);
 	}
 	.current-week {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.25rem;
-		font-weight: 500;
+		gap: 0.15rem;
+		font-weight: 700;
 		white-space: nowrap;
+		color: #000;
+		background: #c0c0c0;
+		border: 2px inset #ddd;
+		padding: 0.2rem 0.75rem;
 	}
 	.rotation-period {
 		font-size: 0.75rem;
-		color: var(--color-text-muted, #718096);
+		color: #444;
 		font-weight: 400;
 	}
 </style>

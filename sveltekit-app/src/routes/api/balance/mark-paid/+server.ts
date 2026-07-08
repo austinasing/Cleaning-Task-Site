@@ -14,7 +14,7 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getHallwayTransactionsCollection, toObjectId } from '$lib/server/db';
+import { getHallwayTransactionsCollection, getUsersCollection, toObjectId } from '$lib/server/db';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = locals.user;
@@ -65,7 +65,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const now = new Date();
 
-	// Update status to paid_pending
+	const usersColl = await getUsersCollection();
+
+	// Update status to paid_pending and immediately credit the balance
+	// (the credit is reversed if the admin rejects)
 	await transactionsColl.updateOne(
 		{ _id: txId },
 		{
@@ -73,6 +76,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				status: 'paid_pending',
 				updatedAt: now
 			}
+		}
+	);
+
+	await usersColl.updateOne(
+		{ _id: transaction.userId },
+		{
+			$inc: { hallwayBalance: -transaction.amount }, // amount is negative, so this adds a positive credit
+			$set: { updatedAt: now }
 		}
 	);
 

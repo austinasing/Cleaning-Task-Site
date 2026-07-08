@@ -74,12 +74,13 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const subtasksColl = await getSubtasksCollection();
 	const weeksColl = await getWeeksCollection();
 
-	// Find all subtasks completed by this user (on-time or late)
+	// Find all subtasks completed, late, or forgotten by this user
 	const completedSubtasks = await subtasksColl
 		.find({
 			$or: [
 				{ completedBy: user.name },
-				{ lateCompletedBy: user.name }
+				{ lateCompletedBy: user.name },
+				{ forgottenBy: user.name }
 			]
 		})
 		.sort({ completedAt: -1, lateCompletedAt: -1 })
@@ -96,7 +97,9 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 	}
 
 	// Calculate stats
-	const totalCompleted = completedSubtasks.filter(s => s.completedBy === user.name).length;
+	const totalCompleted = completedSubtasks.filter(
+		s => s.completedBy === user.name || s.lateCompletedBy === user.name || s.forgottenBy === user.name
+	).length;
 
 	// Count weeks where user had at least one late task
 	let weeksLate = 0;
@@ -118,8 +121,8 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 	// Build response with smiles/frowns totals per week
 	const weeklyTasks = weeks.map(week => {
 		const weekSubtasks = tasksByWeekId.get(week._id!.toString()) || [];
-		const totalSmiles = weekSubtasks.reduce((sum, s) => sum + (s.smiles || 0), 0);
-		const totalFrowns = weekSubtasks.reduce((sum, s) => sum + (s.frowns || 0), 0);
+		const totalSmiles = weekSubtasks.reduce((sum, s) => sum + (s.smilesBy?.length ?? 0), 0);
+		const totalFrowns = weekSubtasks.reduce((sum, s) => sum + (s.frownsBy?.length ?? 0), 0);
 
 		return {
 			weekId: week._id!.toString(),
@@ -136,8 +139,9 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 				completedAt: s.completedAt,
 				lateCompletedAt: s.lateCompletedAt,
 				daysLate: s.daysLate,
-				smiles: s.smiles || 0,
-				frowns: s.frowns || 0
+				forgotten: s.forgotten,
+				smiles: s.smilesBy?.length ?? 0,
+				frowns: s.frownsBy?.length ?? 0
 			}))
 		};
 	});

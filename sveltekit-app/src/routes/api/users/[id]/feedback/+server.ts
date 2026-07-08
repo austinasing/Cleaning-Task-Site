@@ -50,14 +50,17 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		.find(
 			{
 				completedBy: user.name,
-				$or: [{ smiles: { $gt: 0 } }, { frowns: { $gt: 0 } }]
+				$or: [
+					{ 'smilesBy.0': { $exists: true } },
+					{ 'frownsBy.0': { $exists: true } }
+				]
 			},
 			{
 				projection: {
 					subtaskName: 1,
 					taskGroupName: 1,
-					smiles: 1,
-					frowns: 1,
+					smilesBy: 1,
+					frownsBy: 1,
 					weekId: 1
 				}
 			}
@@ -69,8 +72,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	let totalSmiles = 0;
 	let totalFrowns = 0;
 	for (const s of subtasksWithFeedback) {
-		totalSmiles += s.smiles;
-		totalFrowns += s.frowns;
+		totalSmiles += s.smilesBy?.length ?? 0;
+		totalFrowns += s.frownsBy?.length ?? 0;
 	}
 
 	return json({

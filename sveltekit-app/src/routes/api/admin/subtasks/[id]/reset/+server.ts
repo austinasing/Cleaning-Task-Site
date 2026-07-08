@@ -34,8 +34,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 				daysLate: 0,
 				forgotten: false,
 				forgottenBy: null,
-				smiles: 0,
-				frowns: 0,
+				smilesBy: [],
+				frownsBy: [],
 				updatedAt: now
 			}
 		},

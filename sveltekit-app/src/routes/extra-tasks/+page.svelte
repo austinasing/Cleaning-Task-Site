@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { currentUser } from '$lib/stores/auth';
 	import { invalidateAll } from '$app/navigation';
+	import SiteHeader from '$lib/components/SiteHeader.svelte';
 
 	let { data } = $props();
 
@@ -69,13 +70,10 @@
 	<title>Extra Tasks</title>
 </svelte:head>
 
-<div class="page-header">
-	<h1>Extra Tasks</h1>
-	<p>Claim tasks for extra credit towards your hallway balance</p>
-</div>
+<SiteHeader activePage="extra-tasks" />
 
 <button class="btn btn-primary create-btn" onclick={() => (showCreate = !showCreate)}>
-	{showCreate ? 'Cancel' : 'Create Task'}
+	{showCreate ? 'Cancel' : 'Create Extra Task'}
 </button>
 
 {#if showCreate}
@@ -99,7 +97,6 @@
 
 <!-- Available Tasks -->
 {#if availableTasks.length > 0}
-	<h2 class="section-title">Available</h2>
 	<div class="task-list">
 		{#each availableTasks as task (task._id)}
 			<div class="card task-card available">
@@ -141,6 +138,9 @@
 						<button class="btn btn-success btn-sm" onclick={() => confirmComplete(task._id)}>
 							Confirm Done
 						</button>
+						<button class="btn btn-outline btn-sm" onclick={() => deleteTask(task._id)}>
+							Reject
+						</button>
 					{/if}
 				</div>
 			</div>
@@ -159,6 +159,13 @@
 					<span class="task-value">&euro;{task.value}</span>
 				</div>
 				<div class="task-meta">Done by {task.completedBy}</div>
+				{#if isPrivileged}
+					<div class="task-actions">
+						<button class="btn btn-outline btn-sm" onclick={() => deleteTask(task._id)}>
+							Delete
+						</button>
+					</div>
+				{/if}
 			</div>
 		{/each}
 	</div>
@@ -171,43 +178,54 @@
 <style>
 	.create-btn {
 		margin-bottom: 1rem;
+		display: block;
+		margin-left: auto;
+		margin-right: auto;
+		transform: scale(1.25);
+		transform-origin: center;
 	}
 
 	.create-form {
-		padding: 1.25rem;
-		margin-bottom: 1.5rem;
+		padding: 1rem;
+		margin-bottom: 1rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 0.6rem;
 	}
 
 	.section-title {
-		font-size: 1rem;
-		color: var(--color-primary, #2c3e50);
-		margin: 1.25rem 0 0.5rem;
+		font-size: 0.8rem;
+		color: #000;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		background: #a0a0a0;
+		padding: 0.2rem 0.5rem;
+		border: 2px inset #ddd;
+		margin: 1rem 0 0.4rem;
 	}
 
 	.task-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0rem;
 	}
 
 	.task-card {
-		padding: 0.75rem 1rem;
+		padding: 0.5rem 0.75rem;
 	}
 
 	.task-card.available {
-		border-left: 3px solid var(--color-success, #27ae60);
+		border-left: 3px solid #008000;
 	}
 
 	.task-card.pending {
-		border-left: 3px solid var(--color-warning, #e67e22);
+		border-left: 3px solid #806600;
 	}
 
 	.task-card.completed {
-		border-left: 3px solid var(--color-text-muted, #718096);
-		opacity: 0.7;
+		border-left: 3px solid #808080;
+		opacity: 0.6;
 	}
 
 	.task-info {
@@ -217,31 +235,31 @@
 	}
 
 	.task-desc {
-		font-weight: 500;
+		font-weight: 400;
 		font-size: 0.95rem;
 	}
 
 	.task-value {
 		font-weight: 700;
-		color: var(--color-success, #27ae60);
+		color: #008000;
 		font-size: 0.95rem;
 	}
 
 	.task-meta {
 		font-size: 0.8rem;
-		color: var(--color-text-muted, #718096);
-		margin: 0.2rem 0;
+		color: #444;
+		margin: 0.15rem 0;
 	}
 
 	.task-actions {
 		display: flex;
-		gap: 0.4rem;
-		margin-top: 0.4rem;
+		gap: 0.3rem;
+		margin-top: 0.3rem;
 	}
 
 	.empty-state {
 		text-align: center;
-		color: var(--color-text-muted, #718096);
-		padding: 3rem;
+		color: #444;
+		padding: 2rem;
 	}
 </style>

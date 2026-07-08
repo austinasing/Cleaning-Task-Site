@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { currentUser } from '$lib/stores/auth';
 	import { invalidateAll } from '$app/navigation';
+	import SiteHeader from '$lib/components/SiteHeader.svelte';
 
 	let { data } = $props();
 
@@ -13,12 +14,15 @@
 
 	// Transaction view mode
 	let viewMode = $state<'mine' | 'all'>('mine');
+	let filterUserId = $state('');
 	const transactions = $derived(
-		viewMode === 'mine'
-			? (data.transactions || []).filter((tx: { userId: string }) =>
-				tx.userId === $currentUser?.userId || tx.userId?.toString() === $currentUser?.userId
-			  )
-			: data.transactions || []
+		filterUserId
+			? (data.transactions || []).filter((tx: any) => tx.userId?.toString() === filterUserId)
+			: viewMode === 'mine'
+				? (data.transactions || []).filter((tx: { userId: string }) =>
+					tx.userId === $currentUser?.userId || tx.userId?.toString() === $currentUser?.userId
+				  )
+				: data.transactions || []
 	);
 
 	// Payment request form state
@@ -46,6 +50,14 @@
 	let editSubmitting = $state(false);
 	let editError = $state('');
 
+	// Pending approvals filter
+	let filterPendingUserId = $state('');
+	const filteredPendingTransactions = $derived(
+		filterPendingUserId
+			? pendingTransactions.filter((tx: any) => tx.userId?.toString() === filterPendingUserId)
+			: pendingTransactions
+	);
+
 	// Action states
 	let actionLoading = $state<string | null>(null);
 	let actionError = $state('');
@@ -70,7 +82,7 @@
 				return;
 			}
 
-			paymentSuccess = 'Payment request submitted - awaiting approval';
+			paymentSuccess = 'Payment submitted - pending confirmation';
 			paymentAmount = 0;
 			showPaymentRequest = false;
 			await invalidateAll();
@@ -276,7 +288,8 @@
 			late_task_fine: 'Late Fine',
 			supply_reimbursment: 'Reimbursement',
 			payment: 'Payment',
-			payment_request: 'Payment Request'
+			payment_request: 'Payment',
+			fine_payment: 'Fine Payment'
 		};
 		return labels[type] || type;
 	}
@@ -286,9 +299,10 @@
 			unclaimed: 'Unclaimed',
 			claimed: 'Claimed',
 			outstanding: 'Outstanding',
-			paid_pending: 'Pending Approval',
+			paid_pending: 'Paid | Pending Confirmation',
 			resolved: 'Resolved',
-			waived: 'Waived'
+			waived: 'Waived',
+			rejected: 'Rejected'
 		};
 		return labels[status] || status;
 	}
@@ -298,9 +312,7 @@
 	<title>Hallway Balance</title>
 </svelte:head>
 
-<div class="page-header">
-	<h1>Hallway Balance</h1>
-</div>
+<SiteHeader activePage="balance" />
 
 <!-- Your Balance -->
 <div class="card your-balance">
@@ -343,15 +355,17 @@
 
 <!-- Submit Payment -->
 <div class="section">
-	<h2>Submit Payment</h2>
-	<button
-		class="btn btn-primary"
-		onclick={() => (showPaymentRequest = !showPaymentRequest)}
-	>
-		{showPaymentRequest ? 'Cancel' : 'Submit Payment for Approval'}
-	</button>
-
-	{#if showPaymentRequest}
+	{#if !showPaymentRequest}
+		<div class="submit-payment-wrapper">
+			<button
+				class="btn btn-primary submit-payment-btn"
+				onclick={() => (showPaymentRequest = true)}
+			>
+				<img src="/pics/address_book-0.png" alt="" class="btn-icon" />
+				Submit Payment
+			</button>
+		</div>
+	{:else}
 		<form class="card payment-form" onsubmit={submitPaymentRequest}>
 			{#if paymentError}
 				<div class="error-message">{paymentError}</div>
@@ -361,7 +375,6 @@
 			{/if}
 
 			<div class="form-group">
-				<label for="payment-amount">Amount Paid (€)</label>
 				<input
 					id="payment-amount"
 					type="number"
@@ -369,16 +382,138 @@
 					min="0.01"
 					bind:value={paymentAmount}
 					required
-					placeholder="e.g., 15"
+					placeholder="Amount sent e.g., 15"
 				/>
 			</div>
 
-			<button class="btn btn-primary" type="submit" disabled={paymentSubmitting}>
-				{paymentSubmitting ? 'Submitting...' : 'Submit for Approval'}
-			</button>
+			<div class="payment-actions">
+				<button class="btn btn-primary" type="submit" disabled={paymentSubmitting}>
+					{paymentSubmitting ? 'Submitting...' : 'Submit'}
+				</button>
+				<button class="btn" type="button" onclick={() => { showPaymentRequest = false; paymentError = ''; paymentSuccess = ''; }}>
+					Cancel
+				</button>
+			</div>
+
+			<div class="bank-details">
+				<div class="bank-details-title">Bank Transfer Details</div>
+				<div class="bank-details-row"><span class="bank-label">Name:</span> <span>Z BASARAN</span></div>
+				<div class="bank-details-row"><span class="bank-label">IBAN:</span> <span>NL16 ABNA 0132 2473 56</span></div>
+			</div>
 		</form>
 	{/if}
 </div>
+
+<!-- Pending Approvals (Admin/Accountant only) -->
+{#if isPrivileged}
+	<div class="section admin-section">
+		<div class="section-header">
+			<h2>Admin: Pending Approvals</h2>
+			<select
+				class="user-filter-select"
+				bind:value={filterPendingUserId}
+			>
+				<option value="">All users</option>
+				{#each users as user}
+					<option value={user._id}>{user.name}</option>
+				{/each}
+			</select>
+		</div>
+		{#if filteredPendingTransactions.length === 0}
+			<p class="no-pending">{filterPendingUserId ? 'No pending approvals for this user' : 'No payments to approve'}</p>
+		{:else}
+			<div class="transaction-list">
+				{#each filteredPendingTransactions as tx}
+					<div class="card transaction-item pending">
+						<div class="tx-top">
+							<span class="tx-user">{tx.userName}</span>
+							<span class="tx-badge badge">{typeLabel(tx.type)}</span>
+						</div>
+						<div class="tx-description">{tx.description}</div>
+						<div class="tx-bottom">
+							<span class="tx-amount" class:negative={tx.amount < 0} class:positive={tx.amount > 0}>
+								{formatAmount(tx.amount)}
+							</span>
+							<div class="approval-actions">
+								<button
+									class="btn btn-success btn-small"
+									onclick={() => approveTransaction(tx._id, 'approve')}
+									disabled={actionLoading === tx._id}
+								>
+									Approve
+								</button>
+								<button
+									class="btn btn-danger btn-small"
+									onclick={() => approveTransaction(tx._id, 'reject')}
+									disabled={actionLoading === tx._id}
+								>
+									Reject
+								</button>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
+{/if}
+
+<!-- Admin: Create Transaction -->
+{#if isPrivileged}
+	<div class="section admin-section">
+		<h2>Admin: Manage Transactions</h2>
+		<button
+			class="btn btn-primary"
+			onclick={() => (showAdminForm = !showAdminForm)}
+		>
+			{showAdminForm ? 'Close' : 'Create Custom Transaction'}
+		</button>
+
+		{#if showAdminForm}
+			<form class="card payment-form" onsubmit={submitAdminTransaction}>
+				{#if adminError}
+					<div class="error-message">{adminError}</div>
+				{/if}
+				{#if adminSuccess}
+					<div class="success-message">{adminSuccess}</div>
+				{/if}
+
+				<div class="form-group">
+					<label for="admin-user">User</label>
+					<select id="admin-user" bind:value={adminUserId} required>
+						<option value="" disabled>Select user</option>
+						{#each users as user}
+							<option value={user._id}>{user.name}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="admin-type">Type</label>
+					<select id="admin-type" bind:value={adminType}>
+						<option value="payment">Payment (credit)</option>
+						<option value="supply_reimbursment">Supply Reimbursement</option>
+						<option value="task_fine">Task Fine</option>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="admin-amount">Amount (positive = credit, negative = fine)</label>
+					<input id="admin-amount" type="number" step="0.01" bind:value={adminAmount} required />
+				</div>
+
+				<div class="form-group">
+					<label for="admin-desc">Description</label>
+					<input id="admin-desc" type="text" bind:value={adminDescription} required placeholder="e.g., Custom adjustment" />
+				</div>
+
+				<button class="btn btn-primary" type="submit" disabled={adminSubmitting}>
+					{adminSubmitting ? 'Creating...' : 'Create Transaction'}
+				</button>
+			</form>
+		{/if}
+	</div>
+{/if}
 
 <!-- Transactions -->
 <div class="section">
@@ -387,18 +522,28 @@
 		<div class="view-toggle">
 			<button
 				class="toggle-btn"
-				class:active={viewMode === 'mine'}
-				onclick={() => (viewMode = 'mine')}
+				class:active={viewMode === 'mine' && !filterUserId}
+				onclick={() => { viewMode = 'mine'; filterUserId = ''; }}
 			>
-				My Transactions
+				Mine
 			</button>
 			<button
 				class="toggle-btn"
-				class:active={viewMode === 'all'}
-				onclick={() => (viewMode = 'all')}
+				class:active={viewMode === 'all' && !filterUserId}
+				onclick={() => { viewMode = 'all'; filterUserId = ''; }}
 			>
 				All
 			</button>
+			<select
+				class="user-filter-select"
+				bind:value={filterUserId}
+				onchange={() => { if (filterUserId) viewMode = 'all'; }}
+			>
+				<option value="">Filter user...</option>
+				{#each users as user}
+					<option value={user._id}>{user.name}</option>
+				{/each}
+			</select>
 		</div>
 	</div>
 
@@ -436,6 +581,7 @@
 										<option value="paid_pending">Pending Approval</option>
 										<option value="resolved">Resolved</option>
 										<option value="waived">Waived</option>
+										<option value="rejected">Rejected</option>
 									</select>
 								</label>
 							</div>
@@ -499,102 +645,6 @@
 	{/if}
 </div>
 
-<!-- Pending Approvals (Admin/Accountant only) -->
-{#if isPrivileged && pendingTransactions.length > 0}
-	<div class="section admin-section">
-		<h2>Pending Approvals</h2>
-		<div class="transaction-list">
-			{#each pendingTransactions as tx}
-				<div class="card transaction-item pending">
-					<div class="tx-top">
-						<span class="tx-user">{tx.userName}</span>
-						<span class="tx-badge badge">{typeLabel(tx.type)}</span>
-					</div>
-					<div class="tx-description">{tx.description}</div>
-					<div class="tx-bottom">
-						<span class="tx-amount" class:negative={tx.amount < 0} class:positive={tx.amount > 0}>
-							{formatAmount(tx.amount)}
-						</span>
-						<div class="approval-actions">
-							<button
-								class="btn btn-success btn-small"
-								onclick={() => approveTransaction(tx._id, 'approve')}
-								disabled={actionLoading === tx._id}
-							>
-								Approve
-							</button>
-							<button
-								class="btn btn-danger btn-small"
-								onclick={() => approveTransaction(tx._id, 'reject')}
-								disabled={actionLoading === tx._id}
-							>
-								Reject
-							</button>
-						</div>
-					</div>
-				</div>
-			{/each}
-		</div>
-	</div>
-{/if}
-
-<!-- Admin: Create Transaction -->
-{#if isPrivileged}
-	<div class="section admin-section">
-		<h2>Admin: Manage Transactions</h2>
-		<button
-			class="btn btn-primary"
-			onclick={() => (showAdminForm = !showAdminForm)}
-		>
-			{showAdminForm ? 'Close' : 'Create Custom Transaction'}
-		</button>
-
-		{#if showAdminForm}
-			<form class="card payment-form" onsubmit={submitAdminTransaction}>
-				{#if adminError}
-					<div class="error-message">{adminError}</div>
-				{/if}
-				{#if adminSuccess}
-					<div class="success-message">{adminSuccess}</div>
-				{/if}
-
-				<div class="form-group">
-					<label for="admin-user">User</label>
-					<select id="admin-user" bind:value={adminUserId} required>
-						<option value="" disabled>Select user</option>
-						{#each users as user}
-							<option value={user._id}>{user.name}</option>
-						{/each}
-					</select>
-				</div>
-
-				<div class="form-group">
-					<label for="admin-type">Type</label>
-					<select id="admin-type" bind:value={adminType}>
-						<option value="payment">Payment (credit)</option>
-						<option value="supply_reimbursment">Supply Reimbursement</option>
-						<option value="task_fine">Task Fine</option>
-					</select>
-				</div>
-
-				<div class="form-group">
-					<label for="admin-amount">Amount (positive = credit, negative = fine)</label>
-					<input id="admin-amount" type="number" step="0.01" bind:value={adminAmount} required />
-				</div>
-
-				<div class="form-group">
-					<label for="admin-desc">Description</label>
-					<input id="admin-desc" type="text" bind:value={adminDescription} required placeholder="e.g., Custom adjustment" />
-				</div>
-
-				<button class="btn btn-primary" type="submit" disabled={adminSubmitting}>
-					{adminSubmitting ? 'Creating...' : 'Create Transaction'}
-				</button>
-			</form>
-		{/if}
-	</div>
-{/if}
-
 <!-- Everyone's Balance -->
 <div class="section">
 	<h2>Everyone's Balance</h2>
@@ -624,36 +674,40 @@
 <style>
 	.your-balance {
 		text-align: center;
-		padding: 1.5rem;
-		margin-bottom: 1.5rem;
+		padding: 1rem;
+		margin-bottom: 1rem;
 	}
 
 	.balance-label {
-		font-size: 0.9rem;
-		color: var(--color-text-muted, #718096);
+		font-size: 0.85rem;
+		color: #444;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		margin-bottom: 0.25rem;
+		margin-bottom: 0.15rem;
 	}
 
 	.balance-amount {
-		font-size: 2.5rem;
+		font-size: 2rem;
 		font-weight: 700;
 	}
 
 	.section {
-		margin-bottom: 1.5rem;
+		margin-bottom: 1rem;
 	}
 
 	.section h2 {
-		font-size: 1.1rem;
-		color: var(--color-primary, #2c3e50);
-		margin-bottom: 0.5rem;
+		font-size: 1rem;
+		color: #000;
+		margin-bottom: 0rem;
+		font-weight: 700;
+		background: #a0a0a0;
+		padding: 0.2rem 0.5rem;
+		border: 2px inset #ddd;
 	}
 
 	.section-desc {
 		font-size: 0.85rem;
-		color: var(--color-text-muted, #718096);
+		color: #444;
 		margin-bottom: 0.75rem;
 	}
 
@@ -661,7 +715,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 0.75rem;
+		margin-bottom: 0rem;
 	}
 
 	.section-header h2 {
@@ -670,41 +724,56 @@
 
 	.view-toggle {
 		display: flex;
-		gap: 0.25rem;
+		gap: 0;
 	}
 
 	.toggle-btn {
-		padding: 0.35rem 0.75rem;
+		padding: 0.3rem 0.6rem;
 		font-size: 0.8rem;
-		border: 1px solid var(--color-border, #e2e8f0);
-		background: var(--color-bg, #f5f5f5);
-		border-radius: 4px;
+		border: 2px outset #ddd;
+		background: #c0c0c0;
 		cursor: pointer;
+		font-family: inherit;
+		transform: translateY(1px);
+	}
+
+	.toggle-btn:active {
+		border-style: inset;
 	}
 
 	.toggle-btn.active {
-		background: var(--color-primary, #2c3e50);
-		color: white;
-		border-color: var(--color-primary, #2c3e50);
+		border-style: inset;
+		background: #a0a0a0;
+		font-weight: 700;
+	}
+
+	.user-filter-select {
+		padding: 0.3rem 0.4rem;
+		font-size: 0.8rem;
+		border: 2px inset #ddd;
+		background: #fff;
+		font-family: inherit;
+		cursor: pointer;
+		transform: translateY(1px);
 	}
 
 	.fine-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.4rem;
 	}
 
 	.fine-item {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 0.75rem 1rem;
+		padding: 0.5rem 0.75rem;
 	}
 
 	.fine-info {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
+		gap: 0.1rem;
 	}
 
 	.fine-amount {
@@ -714,12 +783,12 @@
 
 	.fine-desc {
 		font-size: 0.85rem;
-		color: var(--color-text, #2d3748);
+		color: #000;
 	}
 
 	.fine-paired {
 		font-size: 0.78rem;
-		color: var(--color-text-muted, #718096);
+		color: #444;
 	}
 
 	.balance-table {
@@ -729,21 +798,22 @@
 	.table-header {
 		display: flex;
 		justify-content: space-between;
-		padding: 0.6rem 1rem;
-		background: var(--color-bg, #f5f5f5);
-		font-weight: 600;
+		padding: 0.5rem 0.75rem;
+		background: #c0c0c0;
+		font-weight: 700;
 		font-size: 0.85rem;
-		color: var(--color-text-muted, #718096);
+		color: #000;
 		text-transform: uppercase;
 		letter-spacing: 0.03em;
+		border-bottom: 1px solid #808080;
 	}
 
 	.table-row {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 0.6rem 1rem;
-		border-bottom: 1px solid var(--color-border, #e2e8f0);
+		padding: 0.5rem 0.75rem;
+		border-bottom: 1px solid #808080;
 		font-size: 0.9rem;
 	}
 
@@ -762,77 +832,125 @@
 	}
 
 	.col-balance {
-		font-weight: 600;
+		font-weight: 700;
 	}
 
 	.negative {
-		color: var(--color-danger, #e74c3c);
+		color: #cc0000;
 	}
 
 	.positive {
-		color: var(--color-success, #27ae60);
+		color: #008000;
+	}
+
+	.submit-payment-wrapper {
+		display: flex;
+		justify-content: center;
+	}
+
+	.submit-payment-btn {
+		font-weight: 700;
+		font-size: 1.2rem;
+		padding: 0.8rem 2rem;
+	}
+
+	.btn-icon {
+		height: 1em;
+		width: auto;
+		image-rendering: pixelated;
+		vertical-align: middle;
 	}
 
 	.payment-form {
-		margin-top: 0.75rem;
-		padding: 1.25rem;
+		padding: 1rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 0.6rem;
+	}
+
+	.payment-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.bank-details {
+		border: 2px inset #ddd;
+		padding: 0.5rem 0.75rem;
+		background: #c0c0c0;
+		font-size: 0.85rem;
+	}
+
+	.bank-details-title {
+		font-weight: 700;
+		margin-bottom: 0.3rem;
+		font-size: 0.9rem;
+	}
+
+	.bank-details-row {
+		display: flex;
+		gap: 0.4rem;
+		padding: 0.1rem 0;
+	}
+
+	.bank-label {
+		font-weight: 700;
+		min-width: 5rem;
 	}
 
 	.empty-state {
-		color: var(--color-text-muted, #718096);
+		color: #444;
 		text-align: center;
-		padding: 2rem;
+		padding: 1.5rem;
+		background: #c0c0c0;
+		border: 2px inset #ddd;
 	}
 
 	.transaction-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.4rem;
 	}
 
 	.transaction-item {
-		padding: 0.75rem 1rem;
+		padding: 0.5rem 0.75rem;
 	}
 
 	.transaction-item.pending {
-		border-left: 3px solid var(--color-warning, #f39c12);
+		border-left: 3px solid #806600;
 	}
 
 	.tx-top {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 0.25rem;
+		margin-bottom: 0.2rem;
 	}
 
 	.tx-user {
-		font-weight: 600;
+		font-weight: 700;
 		font-size: 0.9rem;
 	}
 
 	.tx-badges {
 		display: flex;
-		gap: 0.35rem;
+		gap: 0.3rem;
 	}
 
 	.tx-status {
-		background: var(--color-bg, #f5f5f5);
-		color: var(--color-text-muted, #718096);
+		background: #c0c0c0;
+		color: #444;
 	}
 
 	.tx-description {
 		font-size: 0.85rem;
-		color: var(--color-text-muted, #718096);
+		color: #444;
 	}
 
 	.tx-bottom {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-top: 0.35rem;
+		margin-top: 0.25rem;
 	}
 
 	.tx-amount {
@@ -843,83 +961,81 @@
 	.tx-actions {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.4rem;
+		flex-wrap: wrap;
 	}
 
 	.tx-date {
 		font-size: 0.78rem;
-		color: var(--color-text-muted, #718096);
+		color: #444;
 	}
 
 	.approval-actions {
 		display: flex;
-		gap: 0.35rem;
+		gap: 0.3rem;
 	}
 
 	.btn-small {
-		padding: 0.25rem 0.5rem;
+		padding: 0.2rem 0.4rem;
 		font-size: 0.75rem;
 	}
 
-	.btn-success {
-		background: var(--color-success, #27ae60);
-		color: white;
-	}
-
-	.btn-danger {
-		background: var(--color-danger, #e74c3c);
-		color: white;
+	.no-pending {
+		font-size: 0.85rem;
+		color: #444;
 	}
 
 	.admin-section {
-		background: var(--color-bg-alt, #f8f9fa);
-		padding: 1rem;
-		border-radius: 8px;
+		background: #c0c0c0;
+		border: 2px outset #ddd;
+		padding: 0.75rem;
 	}
 
 	.admin-section h2 {
-		color: var(--color-text, #2d3748);
+		color: #000;
 	}
 
 	.edit-form {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.4rem;
 	}
 
 	.edit-row {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
+		gap: 0.1rem;
 	}
 
 	.edit-row label {
 		font-size: 0.8rem;
-		color: var(--color-text-muted, #718096);
+		color: #444;
 	}
 
 	.edit-row input,
 	.edit-row select {
-		padding: 0.35rem 0.5rem;
+		padding: 0.3rem 0.4rem;
 		font-size: 0.85rem;
-		border: 1px solid var(--color-border, #e2e8f0);
-		border-radius: 4px;
+		border: 2px inset #ddd;
+		background: #fff;
+		font-family: inherit;
 	}
 
 	.edit-actions {
 		display: flex;
-		gap: 0.5rem;
+		gap: 0.4rem;
 		margin-top: 0.25rem;
 	}
 
 	.btn-outline {
-		background: transparent;
-		border: 1px solid var(--color-border, #e2e8f0);
-		color: var(--color-text, #2d3748);
+		background: #c0c0c0;
+		border: 2px outset #ddd;
+		color: #000;
 	}
 
 	.btn-secondary {
-		background: var(--color-bg, #f5f5f5);
-		color: var(--color-text, #2d3748);
+		background: #c0c0c0;
+		border: 2px outset #ddd;
+		color: #000;
 	}
 </style>

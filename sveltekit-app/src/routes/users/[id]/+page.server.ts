@@ -109,5 +109,27 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 		}
 	}
 
-	return { profile: data.user, allUsers, taskGroups, taskHistory, currentRotationPeriod, taskSchedule };
+	// Build rotation overview for admins: all groups' assignments across all 16 periods
+	let rotationOverview = null;
+	if (locals.user?.role === 'admin' && isOwnProfile) {
+		rotationOverview = [];
+		for (let period = 1; period <= 16; period++) {
+			const assignments: { team: number; taskGroupName: string | null; displayName: string | null }[] = [];
+			for (let team = 1; team <= 8; team++) {
+				const groupName = getTaskGroupForTeam(team, period);
+				assignments.push({
+					team,
+					taskGroupName: groupName,
+					displayName: groupName ? TASK_GROUP_DISPLAY_NAMES[groupName] || groupName : null
+				});
+			}
+			rotationOverview.push({
+				period,
+				isCurrent: period === currentRotationPeriod,
+				assignments
+			});
+		}
+	}
+
+	return { profile: data.user, allUsers, taskGroups, taskHistory, currentRotationPeriod, taskSchedule, rotationOverview };
 };

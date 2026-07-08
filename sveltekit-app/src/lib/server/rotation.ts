@@ -1,17 +1,20 @@
 /**
  * Task rotation logic
  * Maps taskTeam (1-8) × rotationPeriod (1-16) → taskGroupName
- * Based on task_rotation_16.csv
+ *
+ * 6 logical tasks rotate across 8 groups over 16 periods.
+ * Kitchen (fri/mon) and toilet (front/back) alternate for each group
+ * by swapping variants every 4 periods (periods 5-8 and 13-16).
  */
 
 // Rotation matrix: rotationMatrix[taskGroupName][period - 1] = teamNumber
 const ROTATION_MATRIX: Record<string, number[]> = {
-	kitchen_fri: [3, 5, 7, 1, 3, 5, 7, 1, 4, 6, 8, 2, 4, 6, 8, 2],
-	kitchen_mon: [4, 6, 8, 2, 4, 6, 8, 2, 3, 5, 7, 1, 3, 5, 7, 1],
+	kitchen_fri: [3, 5, 7, 1, 4, 6, 8, 2, 3, 5, 7, 1, 4, 6, 8, 2],
+	kitchen_mon: [4, 6, 8, 2, 3, 5, 7, 1, 4, 6, 8, 2, 3, 5, 7, 1],
 	reserve: [6, 8, 2, 4, 5, 7, 1, 3, 6, 8, 2, 4, 5, 7, 1, 3],
 	garbage: [5, 7, 1, 3, 6, 8, 2, 4, 5, 7, 1, 3, 6, 8, 2, 4],
-	toilet_front: [7, 1, 3, 5, 7, 1, 3, 5, 8, 2, 4, 6, 8, 2, 4, 6],
-	toilet_back: [8, 2, 4, 6, 8, 2, 4, 6, 7, 1, 3, 5, 7, 1, 3, 5],
+	toilet_front: [7, 1, 3, 5, 8, 2, 4, 6, 7, 1, 3, 5, 8, 2, 4, 6],
+	toilet_back: [8, 2, 4, 6, 7, 1, 3, 5, 8, 2, 4, 6, 7, 1, 3, 5],
 	hallway: [2, 4, 6, 8, 1, 3, 5, 7, 2, 4, 6, 8, 1, 3, 5, 7],
 	bathroom: [1, 3, 5, 7, 2, 4, 6, 8, 1, 3, 5, 7, 2, 4, 6, 8]
 };

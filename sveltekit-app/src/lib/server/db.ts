@@ -78,15 +78,6 @@ export interface TaskGroup {
 		userId: ObjectId;
 		name: string; // Denormalized for fast display
 	}>;
-	notes: {
-		// Permanent notes per subtask
-		// Key = subtaskName, Value = array of note objects
-		[subtaskName: string]: Array<{
-			text: string;
-			addedBy: string; // User name
-			addedAt: Date;
-		}>;
-	};
 	order?: number; // Optional display order on page
 	updatedAt: Date;
 }
@@ -111,9 +102,9 @@ export interface Subtask {
 	daysLate: number; // 0 if on time, 1-3 if late
 	forgotten: boolean; // True if no one completed (goes to both team members)
 	forgottenBy: string | null; // User who marked it as forgotten
-	// Feedback counts (frontend prevents duplicate votes per session)
-	smiles: number;
-	frowns: number;
+	// Feedback: arrays of user names who voted (enforces one vote per user server-side)
+	smilesBy: string[];
+	frownsBy: string[];
 	order: number; // Display order within task group
 	unclaimedFineProcessed: boolean; // True once cron has created unclaimed fines for this subtask
 	updatedAt: Date;
@@ -130,7 +121,7 @@ export interface Subtask {
 export interface HallwayTransaction {
 	_id?: ObjectId;
 	userId: ObjectId;
-	type: 'task_fine' | 'supply_reimbursment' | 'payment' | 'payment_request';
+	type: 'task_fine' | 'supply_reimbursment' | 'payment' | 'payment_request' | 'fine_payment';
 	amount: number; // Negative for charges/fines, positive for payments/credits
 	description: string; // e.g., "Late task: Kitchen (Fri) (2 days late)"
 
@@ -140,8 +131,8 @@ export interface HallwayTransaction {
 	relatedSubtaskId: ObjectId | null; // Legacy - kept for backwards compatibility
 
 	// Status: unclaimed (paired, claimable), claimed (one took responsibility),
-	// outstanding (normal fine), paid_pending (awaiting approval), resolved (done), waived (cancelled)
-	status: 'unclaimed' | 'claimed' | 'outstanding' | 'paid_pending' | 'resolved' | 'waived';
+	// outstanding (normal fine), paid_pending (awaiting approval), resolved (done), waived (cancelled/forgiven), rejected (denied)
+	status: 'unclaimed' | 'claimed' | 'outstanding' | 'paid_pending' | 'resolved' | 'waived' | 'rejected';
 
 	// For paired unclaimed fines (backup scenario when neither participated)
 	claimGroupId: ObjectId | null; // Links two unclaimed fines together
@@ -182,19 +173,16 @@ export interface ExtraTask {
 }
 
 /**
- * SubtaskNotes collection
- * Shared notes for subtasks across all task groups
- * Keyed by subtask name (e.g., "Kitchen", "Toilet")
+ * TaskGroupNotes collection
+ * Individual tips for a task group, one document per note.
+ * Multiple users can add notes; deletion uses _id.
  */
-export interface SubtaskNote {
+export interface TaskGroupNote {
 	_id?: ObjectId;
-	subtaskName: string; // e.g., "Kitchen", "Toilet"
-	notes: Array<{
-		text: string;
-		addedBy: string; // User name
-		addedAt: Date;
-	}>;
-	updatedAt: Date;
+	taskGroupName: string; // e.g., "kitchen_fri", "supplies"
+	text: string;
+	addedBy: string;    // User name — used for ownership checks on delete
+	addedAt: Date;
 }
 
 // ===================================
@@ -321,11 +309,11 @@ export async function getExtraTasksCollection(): Promise<Collection<ExtraTask>> 
 }
 
 /**
- * Get the subtaskNotes collection with type safety
+ * Get the taskGroupNotes collection with type safety
  */
-export async function getSubtaskNotesCollection(): Promise<Collection<SubtaskNote>> {
+export async function getTaskGroupNotesCollection(): Promise<Collection<TaskGroupNote>> {
 	const database = await connectToDatabase();
-	return database.collection<SubtaskNote>('subtaskNotes');
+	return database.collection<TaskGroupNote>('taskGroupNotes');
 }
 
 // ===================================
@@ -367,13 +355,13 @@ export async function recalculateUserBalance(userId: ObjectId): Promise<number> 
 	const usersColl = await getUsersCollection();
 
 	// Sum all transactions that should affect balance
-	// Exclude: paid_pending (not yet approved), waived (cancelled)
+	// Exclude: paid_pending (not yet approved), waived (cancelled), rejected (denied)
 	const result = await transactionsColl
 		.aggregate([
 			{
 				$match: {
 					userId,
-					status: { $nin: ['paid_pending', 'waived'] }
+					status: { $nin: ['paid_pending', 'waived', 'rejected'] }
 				}
 			},
 			{

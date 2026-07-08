@@ -22,7 +22,6 @@
 	let submitting = $state(false);
 	let errorMsg = $state('');
 
-	const finePreview = $derived(daysLate * 5);
 	const hasSelection = $derived(selected.size > 0);
 
 	function toggleSubtask(id: string) {
@@ -142,7 +141,7 @@
 					disabled={!hasSelection}
 					onclick={() => (mode = 'forgot')}
 				>
-					Mark as Forgot
+					Forgot to Submit
 				</button>
 			</div>
 
@@ -158,28 +157,21 @@
 						class:active={daysLate === d}
 						onclick={() => (daysLate = d)}
 					>
-						{d} day{d > 1 ? 's' : ''}
+						{d} day{d > 1 ? 's' : ''} | &euro;{d * 5}
 					</button>
 				{/each}
-			</div>
-
-			<div class="fine-preview">
-				Fine: <strong>&euro;{finePreview}</strong> per task group
 			</div>
 
 			<div class="modal-actions">
 				<button class="btn btn-outline" onclick={() => (mode = 'select')}>Back</button>
 				<button class="btn btn-warning" onclick={submitLate} disabled={submitting}>
-					{submitting ? 'Submitting...' : `Confirm Late (€${finePreview})`}
+					{submitting ? 'Submitting...' : `Confirm Late (€${daysLate * 5})`}
 				</button>
 			</div>
 
 		{:else if mode === 'forgot'}
 			<p class="instructions">
-				Mark {selected.size} subtask{selected.size > 1 ? 's' : ''} as forgotten?
-			</p>
-			<p class="forgot-note">
-				No fine will be applied. These will be sent to an admin for review.
+				Forget to submit {selected.size} subtask{selected.size > 1 ? 's' : ''} completed on time?
 			</p>
 
 			<div class="modal-actions">
@@ -194,9 +186,9 @@
 
 <style>
 	.modal-subtitle {
-		color: var(--color-text-muted, #718096);
+		color: #444;
 		font-size: 0.9rem;
-		margin-bottom: 1rem;
+		margin-bottom: 0.75rem;
 	}
 
 	.instructions {
@@ -207,7 +199,7 @@
 	.checklist {
 		display: flex;
 		flex-direction: column;
-		gap: 0.4rem;
+		gap: 0.3rem;
 		margin-bottom: 0.75rem;
 	}
 
@@ -215,21 +207,18 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.4rem 0.5rem;
-		border-radius: 6px;
+		padding: 0.3rem 0.4rem;
 		cursor: pointer;
 		font-size: 0.9rem;
-		transition: background 0.1s;
 	}
 
 	.check-item:hover {
-		background: var(--color-bg, #f5f5f5);
+		background: #d0d0d0;
 	}
 
 	.check-item input[type='checkbox'] {
 		width: 1rem;
 		height: 1rem;
-		accent-color: var(--color-primary, #2c3e50);
 	}
 
 	.select-all-btn {
@@ -238,41 +227,30 @@
 
 	.days-selector {
 		display: flex;
-		gap: 0.5rem;
+		gap: 0.4rem;
 		margin-bottom: 1rem;
 	}
 
 	.day-btn {
 		flex: 1;
-		padding: 0.6rem;
-		border: 2px solid var(--color-border, #e2e8f0);
-		border-radius: var(--radius, 8px);
-		background: white;
+		padding: 0.5rem;
+		border: 2px outset #ddd;
+		background: #c0c0c0;
 		cursor: pointer;
 		font-size: 0.9rem;
-		font-weight: 500;
-		transition: all 0.15s;
+		font-weight: 400;
+		font-family: inherit;
+	}
+
+	.day-btn:active {
+		border-style: inset;
 	}
 
 	.day-btn.active {
-		border-color: var(--color-warning, #e67e22);
-		background: var(--color-warning-bg, #ffeaa7);
-		color: #856404;
+		border-style: inset;
+		background: #a0a0a0;
+		font-weight: 700;
 	}
 
-	.fine-preview {
-		padding: 0.75rem;
-		background: var(--color-warning-bg, #ffeaa7);
-		border-radius: var(--radius, 8px);
-		font-size: 0.9rem;
-		text-align: center;
-	}
 
-	.forgot-note {
-		padding: 0.75rem;
-		background: var(--color-info-bg, #d6eaf8);
-		border-radius: var(--radius, 8px);
-		font-size: 0.85rem;
-		color: var(--color-info, #3498db);
-	}
 </style>

@@ -137,120 +137,118 @@
 </div>
 
 <style>
-	/* Reusing styles from login page for consistency */
 	.setup-page {
 		min-height: 100vh;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: #f5f5f5;
+		background-color: #c0c0c0;
+		background-image: url('/pics/100px_new3.png');
+		background-repeat: repeat;
 		padding: 1rem;
 	}
 
 	.setup-card {
-		background: white;
-		border-radius: 12px;
-		padding: 2.5rem;
+		background: #c0c0c0;
+		border: 2px outset #ddd;
+		padding: 2rem;
 		width: 100%;
-		max-width: 420px;
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+		max-width: 380px;
 	}
 
-	h1 { font-size: 1.5rem; text-align: center; color: #2c3e50; margin-bottom: 0.25rem; }
+	h1 { font-size: 1.3rem; text-align: center; color: #000; margin-bottom: 0.25rem; }
 
 	.subtitle {
 		text-align: center;
-		color: #666;
-		margin-bottom: 1.5rem;
+		color: #444;
+		margin-bottom: 1.25rem;
 		font-size: 0.9rem;
 	}
 
 	.no-users {
 		text-align: center;
-		padding: 2rem 0;
-		color: #666;
+		padding: 1.5rem 0;
+		color: #444;
 	}
 
 	.no-users a {
-		color: #2c3e50;
-		font-weight: 600;
+		color: #000080;
+		font-weight: 700;
 	}
 
 	form {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0.75rem;
 	}
 
 	label {
 		display: flex;
 		flex-direction: column;
-		gap: 0.3rem;
+		gap: 0.25rem;
 	}
 
 	label span {
 		font-size: 0.85rem;
-		font-weight: 500;
-		color: #555;
+		font-weight: 400;
+		color: #000;
 	}
 
 	input,
 	select {
-		padding: 0.6rem 0.75rem;
-		border: 1px solid #ddd;
-		border-radius: 8px;
+		padding: 0.4rem 0.5rem;
+		border: 2px inset #ddd;
+		background: #fff;
 		font-size: 0.95rem;
 		outline: none;
-		transition: border-color 0.15s;
-		background-color: white;
-		color: #333;
+		color: #000;
+		font-family: inherit;
 	}
 
 	input:focus,
 	select:focus {
-		border-color: #2c3e50;
+		outline: 1px dotted #000;
 	}
 
 	.btn-setup {
-		background: #2c3e50;
-		color: white;
-		border: none;
-		padding: 0.7rem;
-		border-radius: 8px;
+		background: #c0c0c0;
+		color: #000;
+		border: 2px outset #ddd;
+		padding: 0.5rem;
 		font-size: 0.95rem;
-		font-weight: 600;
+		font-weight: 700;
 		cursor: pointer;
 		margin-top: 0.5rem;
-		transition: background 0.15s;
+		font-family: inherit;
 	}
 
-	.btn-setup:hover:not(:disabled) {
-		background: #34495e;
+	.btn-setup:active {
+		border-style: inset;
 	}
 
 	.btn-setup:disabled {
-		opacity: 0.6;
+		opacity: 0.5;
 		cursor: not-allowed;
 	}
 
 	.error-message {
-		background: #f8d7da;
-		color: #721c24;
-		padding: 0.6rem 0.8rem;
-		border-radius: 8px;
+		background: #c0c0c0;
+		color: #cc0000;
+		padding: 0.5rem 0.75rem;
 		font-size: 0.9rem;
-		border: 1px solid #f5c6cb;
+		border: 2px inset #ddd;
+		font-weight: 700;
 	}
 
 	.login-link {
 		text-align: center;
-		margin-top: 1.25rem;
+		margin-top: 1rem;
 		font-size: 0.85rem;
-		color: #666;
+		color: #444;
 	}
 
 	.login-link a {
-		color: #2c3e50;
-		font-weight: 600;
+		color: #000080;
+		font-weight: 700;
 	}
 </style>

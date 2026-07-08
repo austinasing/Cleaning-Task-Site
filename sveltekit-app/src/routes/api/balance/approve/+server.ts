@@ -84,24 +84,32 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			}
 		);
 
-		// For payment requests, credit the user's balance
-		// For marked-as-paid fines, the balance was already affected - now just resolve
 		let balanceChange = 0;
 
 		if (transaction.type === 'payment_request') {
-			// Credit the user's balance with the payment amount
+			// Balance was already credited at submission time, just confirm
 			balanceChange = transaction.amount;
-			await usersColl.updateOne(
-				{ _id: transaction.userId },
-				{
-					$inc: { hallwayBalance: transaction.amount },
-					$set: { updatedAt: now }
-				}
-			);
+		} else {
+			// Fine payment: balance was already credited when user marked as paid.
+			// Just record the fine_payment audit transaction.
+			balanceChange = -transaction.amount; // positive credit (already applied)
+			await transactionsColl.insertOne({
+				userId: transaction.userId,
+				type: 'fine_payment',
+				amount: -transaction.amount,
+				description: `Fine payment: ${transaction.description}`,
+				weekId: transaction.weekId,
+				taskGroupName: transaction.taskGroupName,
+				relatedSubtaskId: transaction.relatedSubtaskId,
+				status: 'resolved',
+				claimGroupId: null,
+				pairedUserId: null,
+				approvedByUserId: approverUserId,
+				approvedAt: now,
+				createdAt: now,
+				updatedAt: now
+			});
 		}
-		// For task_fine that was marked paid, the negative amount was already
-		// applied when the fine was created. Approving just confirms payment.
-		// No balance change needed.
 
 		return json({
 			success: true,
@@ -109,12 +117,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			balanceChange
 		});
 	} else {
-		// Reject - waive the transaction
+		// Reject:
+		// - payment_request: mark as 'rejected' and reverse the balance credit
+		// - task_fine (marked-paid): revert to 'outstanding' so the fine re-applies to balance
+		const isPaymentRequest = transaction.type === 'payment_request';
+		const rejectedStatus = isPaymentRequest ? 'rejected' : 'outstanding';
+
 		await transactionsColl.updateOne(
 			{ _id: txId },
 			{
 				$set: {
-					status: 'waived',
+					status: rejectedStatus,
 					approvedByUserId: approverUserId,
 					approvedAt: now,
 					updatedAt: now
@@ -122,14 +135,30 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			}
 		);
 
-		// For payment requests that are rejected, nothing was applied to balance anyway
-		// For marked-as-paid fines that are rejected, the fine stays in effect
-		// (balance was already affected, rejecting means "not actually paid")
+		if (isPaymentRequest) {
+			// Reverse the credit that was applied at submission time
+			await usersColl.updateOne(
+				{ _id: transaction.userId },
+				{
+					$inc: { hallwayBalance: -transaction.amount },
+					$set: { updatedAt: now }
+				}
+			);
+		} else {
+			// Reverse the early credit applied when user marked the fine as paid
+			await usersColl.updateOne(
+				{ _id: transaction.userId },
+				{
+					$inc: { hallwayBalance: transaction.amount }, // amount is negative, re-applies the fine
+					$set: { updatedAt: now }
+				}
+			);
+		}
 
 		return json({
 			success: true,
-			newStatus: 'waived',
-			message: 'Transaction rejected'
+			newStatus: rejectedStatus,
+			message: isPaymentRequest ? 'Payment rejected — balance reversed' : 'Payment rejected — fine remains outstanding'
 		});
 	}
 };

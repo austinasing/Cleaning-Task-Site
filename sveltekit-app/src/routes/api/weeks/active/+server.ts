@@ -9,10 +9,17 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getWeeksCollection } from '$lib/server/db';
+import { advanceWeekStatuses } from '$lib/server/cron';
 
 export const GET: RequestHandler = async () => {
 	const weeks = await getWeeksCollection();
-	const activeWeek = await weeks.findOne({ status: 'active' });
+	let activeWeek = await weeks.findOne({ status: 'active' });
+
+	// If no active week found, try advancing statuses first (lazy catch-up)
+	if (!activeWeek) {
+		await advanceWeekStatuses();
+		activeWeek = await weeks.findOne({ status: 'active' });
+	}
 
 	if (!activeWeek) {
 		return json({ error: 'No active week found' }, { status: 404 });

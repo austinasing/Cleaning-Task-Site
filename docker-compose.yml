@@ -1,5 +1,55 @@
 services:
-  # MongoDB Database - Port 27017
+  # SvelteKit app (Node server via adapter-node)
+  app:
+    build:
+      context: ./sveltekit-app
+    container_name: cleaning-tasks-app
+    restart: unless-stopped
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DATABASE: ${MONGO_DATABASE}
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: ${NODE_ENV}
+      TZ: ${TZ}
+      ORIGIN: ${ORIGIN}
+      PORT: ${PORT}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - app-network
+    # Not published to the host - only the caddy reverse proxy talks to it.
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  # Reverse proxy - terminates TLS (automatic HTTPS via Let's Encrypt for a
+  # real DOMAIN) and forwards everything to the app container.
+  caddy:
+    image: caddy:2-alpine
+    container_name: cleaning-tasks-proxy
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-:80}
+    depends_on:
+      app:
+        condition: service_healthy
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-network
+    ports:
+      - "80:80"
+      - "443:443"
+
+  # MongoDB Database
   mongodb:
     image: mongo:7.0
     container_name: cleaning-tasks-db
@@ -8,19 +58,29 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+      TZ: Europe/Amsterdam
     volumes:
       - mongodb_data:/data/db
       # Run initialization script on first startup
       - ./docker/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - app-network
+    # Bound to localhost only - reachable for admin/debugging via an SSH
+    # tunnel (ssh -L 27017:localhost:27017 user@server), never public.
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
 
   # Mongo Express - Web UI for MongoDB
-  # Access at http://localhost:8081
+  # Access via SSH tunnel: ssh -L 8081:localhost:8081 user@server
+  # then browse http://localhost:8081 on your own machine.
   mongo-express:
-    image: mongo-express:latest
+    image: mongo-express:1.0.2
     container_name: cleaning-tasks-admin
     restart: unless-stopped
     environment:
@@ -29,14 +89,22 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
       ME_CONFIG_BASICAUTH_USERNAME: admin
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      TZ: Europe/Amsterdam
     depends_on:
       - mongodb
     networks:
       - app-network
+    # Bound to localhost only - see access note above. This UI should
+    # never be reachable from the public internet.
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
+
 volumes:
   mongodb_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local
 
 # Network for containers to communicate

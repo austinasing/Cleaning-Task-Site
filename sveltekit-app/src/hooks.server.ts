@@ -45,6 +45,7 @@ const PUBLIC_ROUTES = [
 	'/api/auth/unclaimed',
 	'/api/auth/setup',
 	'/api/auth/reset-password',
+	'/api/health',
 	'/login',
 	'/setup'
 ];

@@ -1,8 +1,6 @@
-development_notes.txt
-.claude
+.env
 sveltekit-app/static/
 clear-weeks.js
-clear-overridges.js
-task_rotation_16.js
-init-mongo.js
-fill-mongo.js
+clear-overrides.js
+task_rotation_16.csv
+seed-date/fill-mongo.js

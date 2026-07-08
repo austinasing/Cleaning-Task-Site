@@ -152,8 +152,8 @@ function createSubtasksForWeek(weekId: ObjectId, taskGroups: string[]): Omit<Sub
 				daysLate: 0,
 				forgotten: false,
 				forgottenBy: null,
-				smiles: 0,
-				frowns: 0,
+				smilesBy: [],
+				frownsBy: [],
 				order: template.order,
 				unclaimedFineProcessed: false,
 				updatedAt: now

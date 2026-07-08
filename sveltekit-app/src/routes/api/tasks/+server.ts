@@ -30,7 +30,7 @@ import {
 	getWeeksCollection,
 	getTaskGroupsCollection,
 	getSubtasksCollection,
-	getSubtaskNotesCollection,
+	getTaskGroupNotesCollection,
 	getUsersCollection,
 	toObjectId
 } from '$lib/server/db';
@@ -114,37 +114,44 @@ export const GET: RequestHandler = async ({ url }) => {
 		subtasksByGroup[groupName].push(subtask);
 	}
 
-	// Fetch all subtask notes (shared globally)
-	const subtaskNotesColl = await getSubtaskNotesCollection();
-	const allNotes = await subtaskNotesColl.find().toArray();
+	// Fetch all task group notes (one document per note)
+	const taskGroupNotesColl = await getTaskGroupNotesCollection();
+	const allNotes = await taskGroupNotesColl.find().sort({ addedAt: 1 }).toArray();
 
-	// Create a map of subtaskName -> notes array
-	const notesBySubtask: Record<string, typeof allNotes[0]['notes']> = {};
-	for (const noteDoc of allNotes) {
-		notesBySubtask[noteDoc.subtaskName] = noteDoc.notes;
+	// Group individual note docs by taskGroupName
+	const notesByGroup: Record<string, Array<{ _id: string; text: string; addedBy: string; addedAt: Date }>> = {};
+	for (const note of allNotes) {
+		if (!notesByGroup[note.taskGroupName]) {
+			notesByGroup[note.taskGroupName] = [];
+		}
+		notesByGroup[note.taskGroupName].push({
+			_id: note._id!.toString(),
+			text: note.text,
+			addedBy: note.addedBy,
+			addedAt: note.addedAt
+		});
+	}
+
+	// Build a name → emoji map from all active users
+	const userEmojiMap: Record<string, string> = {};
+	for (const user of allUsers) {
+		userEmojiMap[user.name] = user.emoji || '';
 	}
 
 	// Combine task groups (with dynamic members) with their subtasks and shared notes
 	const taskGroupsWithSubtasks = taskGroupsWithDynamicMembers.map((group) => {
-		// Build notes object for this task group (same format as before)
-		const notesForGroup: Record<string, typeof allNotes[0]['notes']> = {};
 		const groupSubtasks = subtasksByGroup[group.name] || [];
-
-		for (const subtask of groupSubtasks) {
-			if (notesBySubtask[subtask.subtaskName]) {
-				notesForGroup[subtask.subtaskName] = notesBySubtask[subtask.subtaskName];
-			}
-		}
 
 		return {
 			...group,
-			notes: notesForGroup,
+			notes: notesByGroup[group.name] || [],
 			subtasks: groupSubtasks
 		};
 	});
 
 	return json({
 		week,
-		taskGroups: taskGroupsWithSubtasks
+		taskGroups: taskGroupsWithSubtasks,
+		userEmojiMap
 	});
 };

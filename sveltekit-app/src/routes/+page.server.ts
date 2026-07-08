@@ -32,6 +32,7 @@ export const load: PageServerLoad = async ({ fetch }) => {
 	return {
 		activeWeek,
 		taskGroups: tasksData.taskGroups,
+		userEmojiMap: tasksData.userEmojiMap ?? {},
 		allWeeks
 	};
 };

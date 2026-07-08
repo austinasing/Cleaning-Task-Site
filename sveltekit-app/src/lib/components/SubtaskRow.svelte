@@ -1,6 +1,14 @@
+<script module lang="ts">
+	// Shared across every SubtaskRow so confetti cache-bust keys are globally
+	// unique. A per-instance counter would collide between rows (each starting
+	// at 0), making the browser serve an already-finished animation as a still.
+	let confettiSeq = 0;
+</script>
+
 <script lang="ts">
-	import { isSubmissionBlocked, getBlockoutMessage } from '$lib/utils/blockout';
+	import { isSubmissionBlocked } from '$lib/utils/blockout';
 	import { invalidateAll } from '$app/navigation';
+	import { currentUser } from '$lib/stores/auth';
 
 	interface SubtaskData {
 		_id: string;
@@ -13,66 +21,70 @@
 		daysLate: number;
 		forgotten: boolean;
 		forgottenBy: string | null;
-		smiles: number;
-		frowns: number;
-	}
-
-	interface NoteData {
-		text: string;
-		addedBy: string;
-		addedAt: string;
+		smilesBy: string[];
+		frownsBy: string[];
 	}
 
 	let {
 		subtask,
 		weekStartDate,
-		notes = [],
-		readonly = false
+		readonly = false,
+		userEmojiMap = {}
 	}: {
 		subtask: SubtaskData;
 		weekStartDate: string;
-		notes?: NoteData[];
 		readonly?: boolean;
+		userEmojiMap?: Record<string, string>;
 	} = $props();
-
-	// Track user's current vote for this session (prevents duplicate votes)
-	let userVote = $state<'smile' | 'frown' | null>(null);
 
 	let completing = $state(false);
 	let resetting = $state(false);
-	let notesExpanded = $state(false);
-	let addingNote = $state(false);
-	let newNoteText = $state('');
+	let showConfetti = $state(false);
+	let confettiKey = $state(0);
+	let confettiX = $state(0);
+	let confettiY = $state(0);
 
 	const startDate = $derived(new Date(weekStartDate));
 	const blocked = $derived(isSubmissionBlocked(startDate, subtask.blockoutDay));
-	const blockoutMsg = $derived(blocked ? getBlockoutMessage(startDate, subtask.blockoutDay) : '');
 
 	const isCompleted = $derived(!!subtask.completedBy);
-	const isLateCompleted = $derived(!!subtask.lateCompletedBy);
 	const isForgotten = $derived(subtask.forgotten);
-	// Admin-resolved = forgotten AND lateCompletedBy set (daysLate will be 0)
-	const isAdminResolved = $derived(isForgotten && isLateCompleted);
-	// Awaiting admin = forgotten but NOT yet resolved
-	const isAwaitingAdmin = $derived(isForgotten && !isLateCompleted);
+	const isLateCompleted = $derived(!!subtask.lateCompletedBy && !isForgotten);
 	const isResolved = $derived(isCompleted || isLateCompleted || isForgotten);
+
+	// Due day label: the day before the lockout fires
+	// blockoutDay 1 → locked Tue → due Mon
+	// blockoutDay 3 → locked Thu → due Wed
+	// blockoutDay 5 → locked Sat → due Fri
+	const dueDay = $derived(
+		subtask.blockoutDay === 1 ? 'M' :
+		subtask.blockoutDay === 3 ? 'W' :
+		subtask.blockoutDay === 5 ? 'F' : ''
+	);
 
 	const statusClass = $derived(
 		isCompleted
 			? 'completed'
-			: isAdminResolved
-				? 'admin-resolved'
+			: isForgotten
+				? 'completed'
 				: isLateCompleted
 					? 'late'
-					: isAwaitingAdmin
-						? 'forgotten'
-						: blocked
-							? 'blocked'
-							: 'pending'
+					: blocked
+						? 'blocked'
+						: 'pending'
 	);
 
-	async function handleComplete() {
+	async function handleComplete(e: MouseEvent) {
 		completing = true;
+		// Anchor the confetti to the button's center at click time so it survives
+		// the re-render that swaps Done → Reset once the row resolves.
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		confettiX = rect.left + rect.width / 2;
+		confettiY = rect.top + rect.height / 2;
+		confettiKey = ++confettiSeq;
+		showConfetti = true;
+		// Animation is ~440ms (10 frames @ 25fps); hide shortly after it finishes.
+		setTimeout(() => { showConfetti = false; }, 700);
 		try {
 			const res = await fetch(`/api/subtasks/${subtask._id}/complete`, { method: 'PATCH' });
 			if (res.ok) {
@@ -102,118 +114,53 @@
 	}
 
 	async function handleFeedback(type: 'smile' | 'frown') {
-		if (userVote === type) {
-			// Toggle off - remove current vote
-			const res = await fetch(`/api/subtasks/${subtask._id}/feedback`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ type, action: 'remove' })
-			});
-			if (res.ok) {
-				userVote = null;
-			}
-		} else if (userVote !== null) {
-			// Switch vote - remove old, add new
-			const oldType = userVote;
-			await fetch(`/api/subtasks/${subtask._id}/feedback`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ type: oldType, action: 'remove' })
-			});
-			const res = await fetch(`/api/subtasks/${subtask._id}/feedback`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ type, action: 'add' })
-			});
-			if (res.ok) {
-				userVote = type;
-			}
-		} else {
-			// New vote
-			const res = await fetch(`/api/subtasks/${subtask._id}/feedback`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ type, action: 'add' })
-			});
-			if (res.ok) {
-				userVote = type;
-			}
-		}
-		await invalidateAll();
-	}
-
-	function toggleNotes() {
-		notesExpanded = !notesExpanded;
-	}
-
-	async function addNote() {
-		if (!newNoteText.trim()) return;
-
-		addingNote = true;
-		try {
-			const res = await fetch('/api/notes', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					subtaskName: subtask.subtaskName,
-					text: newNoteText.trim()
-				})
-			});
-
-			if (res.ok) {
-				await invalidateAll();
-				newNoteText = '';
-			}
-		} finally {
-			addingNote = false;
+		const res = await fetch(`/api/subtasks/${subtask._id}/feedback`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ type })
+		});
+		if (res.ok) {
+			await invalidateAll();
 		}
 	}
 
-	async function deleteNote(index: number) {
-		if (!confirm('Delete this tip?')) return;
-
-		try {
-			const res = await fetch('/api/notes', {
-				method: 'DELETE',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					subtaskName: subtask.subtaskName,
-					noteIndex: index
-				})
-			});
-
-			if (res.ok) {
-				await invalidateAll();
-			}
-		} catch (err) {
-			console.error('Failed to delete note:', err);
-		}
-	}
+	const currentUserName = $derived($currentUser?.name ?? '');
+	const userVote = $derived(
+		subtask.smilesBy?.includes(currentUserName) ? ('smile' as const) :
+		subtask.frownsBy?.includes(currentUserName) ? ('frown' as const) :
+		null
+	);
 </script>
+
+{#if showConfetti}
+	<img
+		src="/pics/confetti.webp?k={confettiKey}"
+		class="confetti-anim"
+		style="left:{confettiX}px; top:{confettiY}px;"
+		alt=""
+		aria-hidden="true"
+	/>
+{/if}
 
 <div class="subtask-row {statusClass}">
 	<div class="subtask-main">
 		<div class="subtask-info">
+			{#if dueDay}
+				<span class="due-day-badge">{dueDay}</span>
+			{/if}
 			<span class="subtask-name">{subtask.subtaskName}</span>
-			<button
-				class="info-icon"
-				onclick={toggleNotes}
-				title={notesExpanded ? 'Hide tips' : 'Show tips'}
-				aria-label="Toggle tips"
-			>
-				&#9432;
-				{#if notes.length > 0}
-					<span class="note-count">{notes.length}</span>
-				{/if}
-			</button>
 			{#if isCompleted}
 				<span class="badge badge-success">Done</span>
-			{:else if isAdminResolved}
-				<span class="badge badge-info">Accepted</span>
+				{#if subtask.completedBy}
+					<span class="effected-by">{userEmojiMap[subtask.completedBy] ?? ''} {subtask.completedBy}</span>
+				{/if}
+			{:else if isForgotten}
+				<span class="badge badge-success">Done</span>
 			{:else if isLateCompleted}
 				<span class="badge badge-warning">{subtask.daysLate}d late</span>
-			{:else if isAwaitingAdmin}
-				<span class="badge badge-danger">Forgot</span>
+				{#if subtask.lateCompletedBy}
+					<span class="effected-by">{userEmojiMap[subtask.lateCompletedBy] ?? ''} {subtask.lateCompletedBy}</span>
+				{/if}
 			{:else if blocked}
 				<span class="badge badge-danger">Locked</span>
 			{/if}
@@ -226,7 +173,7 @@
 				</button>
 			{/if}
 
-			{#if (isCompleted || isLateCompleted) && !readonly}
+			{#if (isCompleted || isLateCompleted || isForgotten) && !readonly}
 				<div class="feedback-btns">
 					<button
 						class="feedback-btn"
@@ -234,7 +181,7 @@
 						onclick={() => handleFeedback('smile')}
 						title={userVote === 'smile' ? 'Remove vote' : 'Good job'}
 					>
-						&#128578; {subtask.smiles || ''}
+						&#128578; {subtask.smilesBy?.length || ''}
 					</button>
 					<button
 						class="feedback-btn"
@@ -242,280 +189,158 @@
 						onclick={() => handleFeedback('frown')}
 						title={userVote === 'frown' ? 'Remove vote' : 'Needs work'}
 					>
-						&#128577; {subtask.frowns || ''}
+						&#128577; {subtask.frownsBy?.length || ''}
 					</button>
 				</div>
 			{/if}
 
 			{#if isResolved}
-				<button class="btn btn-danger btn-sm" onclick={handleReset} disabled={resetting}>
-					{resetting ? 'Resetting...' : 'Reset'}
+				<button
+					class="btn-undo"
+					onclick={handleReset}
+					disabled={resetting}
+					title="Reset"
+					aria-label="Reset"
+				>
+					&#8634;
 				</button>
 			{/if}
 		</div>
 	</div>
-
-	{#if isCompleted && subtask.completedBy}
-		<div class="subtask-meta">
-			Completed by {subtask.completedBy}
-			{#if subtask.completedAt}
-				&middot; {new Date(subtask.completedAt).toLocaleDateString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}
-			{/if}
-		</div>
-	{:else if isAdminResolved}
-		<div class="subtask-meta info">
-			{subtask.lateCompletedBy}{#if subtask.forgottenBy} (reported by {subtask.forgottenBy}){/if}
-		</div>
-	{:else if isLateCompleted && subtask.lateCompletedBy}
-		<div class="subtask-meta warning">
-			Late by {subtask.lateCompletedBy} ({subtask.daysLate} day{subtask.daysLate > 1 ? 's' : ''})
-		</div>
-	{:else if isAwaitingAdmin}
-		<div class="subtask-meta danger">
-			{#if subtask.forgottenBy}
-				Marked forgot by {subtask.forgottenBy} &middot; Awaiting admin review
-			{:else}
-				Awaiting admin review
-			{/if}
-		</div>
-	{:else if blocked}
-		<div class="subtask-meta danger">{blockoutMsg}</div>
-	{/if}
-
-	{#if notesExpanded}
-		<div class="subtask-notes">
-			{#if notes.length > 0}
-				{#each notes as note, index}
-					<div class="note">
-						<span class="note-icon">&#128221;</span>
-						<span class="note-text">{note.text}</span>
-						<button class="note-delete" onclick={() => deleteNote(index)} title="Delete tip">
-							&times;
-						</button>
-					</div>
-				{/each}
-			{/if}
-
-			<div class="add-note-section">
-				<input
-					type="text"
-					bind:value={newNoteText}
-					placeholder="Add a tip..."
-					class="note-input"
-					onkeydown={(e) => e.key === 'Enter' && addNote()}
-				/>
-				<button class="btn btn-primary btn-sm" onclick={addNote} disabled={addingNote || !newNoteText.trim()}>
-					{addingNote ? '...' : 'Add'}
-				</button>
-			</div>
-		</div>
-	{/if}
 </div>
 
 <style>
 	.subtask-row {
-		padding: 0.6rem 0.75rem;
-		border-bottom: 1px solid var(--color-border, #e2e8f0);
-		transition: background 0.1s;
+		padding: 0.5rem 0.5rem 0.5rem 0.2rem;
+		border-bottom: 1px solid #808080;
 	}
 
 	.subtask-row:last-child {
 		border-bottom: none;
 	}
 
-	.subtask-row:hover {
-		background: rgba(0, 0, 0, 0.015);
-	}
-
 	.subtask-row.completed {
-		background: rgba(39, 174, 96, 0.04);
+		background: #c0c0c0;
 	}
 
 	.subtask-row.late {
-		background: rgba(230, 126, 34, 0.04);
+		background: #c0c0c0;
 	}
 
-	.subtask-row.forgotten {
-		background: rgba(231, 76, 60, 0.04);
-	}
 
-	.subtask-row.admin-resolved {
-		background: rgba(52, 152, 219, 0.04);
+
+	.subtask-row.pending {
+		background: #fff;
 	}
 
 	.subtask-row.blocked {
-		opacity: 0.6;
+		background: #fff;
+		opacity: 0.5;
 	}
 
 	.subtask-main {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 0.75rem;
+		gap: 0.5rem;
 	}
 
 	.subtask-info {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.4rem;
 		flex: 1;
 		min-width: 0;
+		flex-wrap: wrap;
+	}
+
+	.due-day-badge {
+		font-size: 0.7rem;
+		font-weight: 700;
+		padding: 0.1rem 0.2rem 0rem 0.2rem;
+		border: 1px solid #808080;
+		background: #e0e0e0;
+		color: #000;
+		flex-shrink: 0;
+		white-space: nowrap;
 	}
 
 	.subtask-name {
 		font-size: 0.9rem;
-		font-weight: 500;
+		font-weight: 400;
+	}
+
+	.effected-by {
+		font-size: 0.8rem;
+		color: #444;
 	}
 
 	.subtask-actions {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.4rem;
 		flex-shrink: 0;
 	}
 
-	.subtask-meta {
-		font-size: 0.78rem;
-		color: var(--color-text-muted, #718096);
-		margin-top: 0.2rem;
-	}
-
-	.subtask-meta.warning {
-		color: var(--color-warning, #e67e22);
-	}
-
-	.subtask-meta.danger {
-		color: var(--color-danger, #e74c3c);
-	}
-
-	.subtask-meta.info {
-		color: var(--color-info, #3498db);
+	/* Fixed overlay anchored to the button's click-time center. Fixed positioning
+	   keeps it out of document flow, so it never shifts layout or grows the
+	   scroll area, and sits above all other content. */
+	.confetti-anim {
+		position: fixed;
+		transform: translate(-50%, -50%);
+		width: 240px;
+		height: 240px;
+		z-index: 9999;
+		pointer-events: none;
 	}
 
 	.feedback-btns {
 		display: flex;
-		gap: 0.25rem;
+		gap: 0.2rem;
 	}
 
 	.feedback-btn {
-		background: none;
-		border: 1px solid var(--color-border, #e2e8f0);
-		border-radius: 999px;
-		padding: 0.15rem 0.4rem;
+		background: #c0c0c0;
+		border: 1px outset #ddd;
+		padding: 0.1rem 0.35rem;
 		cursor: pointer;
 		font-size: 0.75rem;
-		transition: background 0.1s;
 	}
 
-	.feedback-btn:hover {
-		background: var(--color-bg, #f5f5f5);
+	.feedback-btn:active {
+		border-style: inset;
 	}
 
 	.feedback-btn.active {
-		background: var(--color-primary, #2c3e50);
-		color: white;
-		border-color: var(--color-primary, #2c3e50);
+		border-style: inset;
+		background: #a0a0a0;
 	}
 
-	.info-icon {
-		background: none;
-		border: 1px solid var(--color-border, #e2e8f0);
-		border-radius: 50%;
-		width: 1.3rem;
-		height: 1.3rem;
-		display: inline-flex;
+	.btn-undo {
+		display: flex;
 		align-items: center;
 		justify-content: center;
-		cursor: pointer;
-		font-size: 0.75rem;
-		color: var(--color-text-muted, #718096);
-		transition: all 0.15s;
+		width: 1.2rem;
+		height: 1.2rem;
 		padding: 0;
-		flex-shrink: 0;
-		position: relative;
-	}
-
-	.info-icon:hover {
-		background: var(--color-bg, #f5f5f5);
-		border-color: var(--color-primary, #2c3e50);
-		color: var(--color-primary, #2c3e50);
-	}
-
-	.note-count {
-		position: absolute;
-		top: -4px;
-		right: -4px;
-		background: var(--color-danger, #e74c3c);
-		color: white;
-		border-radius: 50%;
-		width: 14px;
-		height: 14px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 0.6rem;
-		font-weight: 600;
+		background: #c0c0c0;
+		color: #c00000;
+		border: 2px outset #e0e0e0;
+		font-size: 1rem;
 		line-height: 1;
-	}
-
-	.subtask-notes {
-		margin-top: 0.5rem;
-		padding-top: 0.5rem;
-		border-top: 1px solid var(--color-border, #e2e8f0);
-	}
-
-	.note {
-		font-size: 0.8rem;
-		color: var(--color-text, #2c3e50);
-		padding: 0.4rem 0;
-		display: flex;
-		align-items: baseline;
-		gap: 0.4rem;
-	}
-
-	.note-icon {
-		flex-shrink: 0;
-	}
-
-	.note-text {
-		flex: 1;
-	}
-
-	.note-delete {
-		background: none;
-		border: none;
-		color: var(--color-danger, #e74c3c);
+		font-weight: 700;
 		cursor: pointer;
-		font-size: 1.2rem;
-		line-height: 1;
-		padding: 0 0.25rem;
-		opacity: 0.5;
-		transition: opacity 0.15s;
-		flex-shrink: 0;
 	}
 
-	.note-delete:hover {
-		opacity: 1;
+	.btn-undo:active:not(:disabled) {
+		border-style: inset;
+		background: #a0a0a0;
+		box-shadow: none;
 	}
 
-	.add-note-section {
-		margin-top: 0.5rem;
-		display: flex;
-		gap: 0.5rem;
-		align-items: center;
+	.btn-undo:disabled {
+		cursor: default;
+		opacity: 0.8;
 	}
 
-	.note-input {
-		flex: 1;
-		padding: 0.4rem 0.6rem;
-		border: 1px solid var(--color-border, #e2e8f0);
-		border-radius: 4px;
-		font-size: 0.85rem;
-		background: white;
-	}
-
-	.note-input:focus {
-		outline: none;
-		border-color: var(--color-accent, #3498db);
-	}
 </style>
